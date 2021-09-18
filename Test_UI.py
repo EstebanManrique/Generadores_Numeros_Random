@@ -1,109 +1,183 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Sep 18 13:28:41 2021
 
-@author: rodri
-"""
+import tkinter as tk
+from tkinter import ttk
+from tkinter import font as tkFont
 
-from tkinter import *
-root =Tk()
-root.title("Simple Calculator")
 
-e=Entry(root,width=35, borderwidth=5)
-e.grid(row=0,column=0,columnspan=3, padx=10,pady=10 )
+class App(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.geometry("920x450")
+        self.title('Generador de Números Aleatorios')
 
-def button_click(number):   
-    current = e.get()
-    e.delete(0,END)
-    e.insert(0, str(current) + str(number))
+        # initialize data
+        self.menu = ("Método de los Centros Cuadrados",
+      "Método Congruencial",
+      "Método Congruencial Mixto",
+      "Generador Multiplicativo",
+      "Método Congruencial Lineal Combinado")
+
+        # set up variable
+        self.option = tk.StringVar(self)
+        
+        self.option.set(self.menu[0])
+        
+        # create widget
+        self.create_wigets()
+
+    def create_wigets(self):
+        # padding for widgets using the grid layout
+        paddings = {'padx': 5, 'pady': 5}
+
+        # label
+        label = ttk.Label(self,  text='SIMULADOR DE NUMEROS RANDOM',font = ("Castellar",15))
+        label.grid(column=0, row=0, sticky=tk.W, **paddings)
+        
+
+        self.frame = tk.LabelFrame(self,text="Método de los Centros Cuadrados", borderwidth=8, padx=100, pady=50, labelanchor = "nw", font = ("Castellar",12))
+        self.frame.place(x=10, y=70)
+
+        
+        
+        # option menu
+        option_menu = tk.OptionMenu(
+            self,
+            self.option,
+            *self.menu,
+            command=self.option_changed)
+        
+        helv36 = tkFont.Font(family='Castellar', size=8)
+        option_menu.config(font=helv36)
+        
+        option_menu.place(x=585, y=10)
+
+
+        
+    def cuadrados_frame(self, *args):
+        self.frame['text']="Método de los Centros Cuadrados"
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+
+        
+        
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        semilla_input = ttk.Entry(self.frame, width=20).grid(column=1,row=0)
+
+        
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        total_input = ttk.Entry(self.frame, width=20).grid(column=1,row=1)
+        
+        sumbit_btn= tk.Button(self.frame, text="Generar",font = ("Castellar",8)).place(relx=0.4, rely=1.1)
+        
+    def congruencial_frame(self, *args):
+
+        self.frame['text']="Método Congruencial"
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+
+        
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        semilla_input = ttk.Entry(self.frame, width=20).grid(column=1,row=0)
+        
+        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        multiplicador_input = ttk.Entry(self.frame, width=20).grid(column=1,row=1)
+        
+        incremento_label= ttk.Label(self.frame,  text='Incremento:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10)
+        incremento_input = ttk.Entry(self.frame, width=20).grid(column=1,row=2)
+        
+        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
+        modulo_input = ttk.Entry(self.frame, width=20).grid(column=1,row=3)
+        
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=4,padx=10,pady=10)
+        total_input = ttk.Entry(self.frame, width=20).grid(column=1,row=4)        
+        
+        sumbit_btn= tk.Button(self.frame, text="Generar",font = ("Castellar",8)).place(relx=0.4, rely=1.1)
+        
     
-def button_clear():
-    e.delete(0,END)
+    def congruencial_mixto_frame(self, *args):
+
+        self.frame['text']="Método Congruencial Mixto"
+        
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+
+        
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        semilla_input = ttk.Entry(self.frame, width=20).grid(column=1,row=0)
+        
+        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        multiplicador_input = ttk.Entry(self.frame, width=20).grid(column=1,row=1)
+        
+        incremento_label= ttk.Label(self.frame,  text='Incremento:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10)
+        incremento_input = ttk.Entry(self.frame, width=20).grid(column=1,row=2)
+        
+        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
+        modulo_input = ttk.Entry(self.frame, width=20).grid(column=1,row=3)
+        
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=4,padx=10,pady=10)
+        total_input = ttk.Entry(self.frame, width=20).grid(column=1,row=4)  
+        
+        sumbit_btn= tk.Button(self.frame, text="Generar",font = ("Castellar",8)).place(relx=0.4, rely=1.1)
+        
     
-def button_add():
-    first_number=e.get()
-    global f_num
-    global math
-    math="addition"
-    f_num=int(first_number)
-    e.delete(0,END)
+        
+    def multiplicativo_frame(self, *args):
+
+        self.frame['text']="Generador Multiplicativo"
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+            
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        semilla_input = ttk.Entry(self.frame, width=20).grid(column=1,row=0)
+        
+        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        multiplicador_input = ttk.Entry(self.frame, width=20).grid(column=1,row=1)
+        
+        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10)
+        modulo_input = ttk.Entry(self.frame, width=20).grid(column=1,row=2)
+        
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
+        total_input = ttk.Entry(self.frame, width=20).grid(column=1,row=3)    
+        
+        sumbit_btn= tk.Button(self.frame, text="Generar",font = ("Castellar",8)).place(relx=0.4, rely=1.1)
+        
+    def congruencial_lineal_frame(self, *args):
+
+        self.frame['text']="Método Congruencial Lineal"
+        for widget in self.frame.winfo_children():
+            widget.destroy()
+        
+        
+        disclaimer = ttk.Label(self.frame,  text='Introduce tus valores con el siguiente formato: 456, 7891, 7831, ...',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        
+        
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        semilla_input = ttk.Entry(self.frame, width=20).grid(column=1,row=1)
+        
+        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10)
+        multiplicador_input = ttk.Entry(self.frame, width=20).grid(column=1,row=2)
+        
+        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
+        modulo_input = ttk.Entry(self.frame, width=20).grid(column=1,row=3)
+        
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=4,padx=10,pady=10)
+        total_input = ttk.Entry(self.frame, width=20).grid(column=1,row=4)          
+        
+        sumbit_btn= tk.Button(self.frame, text="Generar",font = ("Castellar",8)).place(relx=0.5, rely=1.1)
+        
     
-def button_equal():
-    second_number=e.get()
-    e.delete(0,END)
-    
-    if math == "addition":
-        e.insert(0, f_num + int(second_number))
-    if math == "substraction":
-        e.insert(0, f_num - int(second_number))
-    if math == "multiplication":
-        e.insert(0, f_num * int(second_number))
-    if math == "division":
-        e.insert(0, f_num / int(second_number))
-    
-def button_substract():
-    first_number=e.get()
-    global f_num
-    global math
-    math="substraction"
-    f_num=int(first_number)
-    e.delete(0,END)
+    def option_changed(self, *args):
+        if self.option.get() == self.menu[0]:
+            self.cuadrados_frame()
+        elif self.option.get() == self.menu[1]:
+            self.congruencial_frame()
+        elif self.option.get() == self.menu[2]:
+            self.congruencial_mixto_frame()
+        elif self.option.get() == self.menu[3]:
+            self.multiplicativo_frame()
+        elif self.option.get() == self.menu[4]:
+            self.congruencial_lineal_frame()        
 
-def button_multiply():
-    first_number=e.get()
-    global f_num
-    global math
-    math="multiplication"
-    f_num=int(first_number)
-    e.delete(0,END)
-
-def button_divide():
-    first_number=e.get()
-    global f_num
-    global math
-    math="division"
-    f_num=int(first_number)
-    e.delete(0,END)
-    
-button_1 = Button(root, text="1",padx=40,pady=20,command = lambda: button_click(1))
-button_2 = Button(root, text="2",padx=40,pady=20,command = lambda: button_click(2))
-button_3 = Button(root, text="3",padx=40,pady=20,command = lambda: button_click(3))
-button_4 = Button(root, text="4",padx=40,pady=20,command = lambda: button_click(4))
-button_5 = Button(root, text="5",padx=40,pady=20,command = lambda: button_click(5))
-button_6 = Button(root, text="6",padx=40,pady=20,command = lambda: button_click(6))
-button_7 = Button(root, text="7",padx=40,pady=20,command = lambda: button_click(7))
-button_8 = Button(root, text="8",padx=40,pady=20,command = lambda: button_click(8))
-button_9 = Button(root, text="9",padx=40,pady=20,command = lambda: button_click(9))
-button_0 = Button(root, text="0",padx=40,pady=20,command = lambda: button_click(0))
-button_add = Button(root, text="+",padx=39,pady=20,command = button_add)
-button_equal = Button(root, text="=",padx=91,pady=20,command = button_equal)
-button_clear = Button(root, text="Clear",padx=79,pady=20,command = button_clear)
-
-button_substract = Button(root, text="-",padx=41,pady=20,command = button_substract)
-button_multiply = Button(root, text="*",padx=40,pady=20,command = button_multiply)
-button_divide = Button(root, text="/",padx=41,pady=20,command = button_divide)
-
-
-button_1.grid(row=3,column=0)
-button_2.grid(row=3,column=1)
-button_3.grid(row=3,column=2)
-
-button_4.grid(row=2,column=0)
-button_5.grid(row=2,column=1)
-button_6.grid(row=2,column=2)
-
-button_7.grid(row=1,column=0)
-button_8.grid(row=1,column=1)
-button_9.grid(row=1,column=2)
-
-button_0.grid(row=4,column=0)
-button_clear.grid(row=4,column=1,columnspan=2)
-button_add.grid(row=5,column=0)
-button_equal.grid(row=5,column=1,columnspan=2)
-
-button_substract.grid(row=6,column=0)
-button_multiply.grid(row=6,column=1)
-button_divide.grid(row=6,column=2)
-
-
-root.mainloop()
+if __name__ == "__main__":
+    app = App()
+    app.mainloop()
