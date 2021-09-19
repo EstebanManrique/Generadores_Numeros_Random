@@ -1,3 +1,8 @@
+import os
+import csv
+import numpy
+import time
+
 def centrosCuadrados(semillaInicio, numerosAGenerar):
     semilla = int(semillaInicio)
     if len(str(semillaInicio)) == 4 and semilla >= 100 and semilla <= 9999:
@@ -8,10 +13,10 @@ def centrosCuadrados(semillaInicio, numerosAGenerar):
         numerosGenerados = 0
 
         while numerosGenerados < numerosAGenerar:
+            complemento = ""
             semillas.append(semilla)
             semillaCuadrado = semilla * semilla
-            if len(str(semillaCuadrado)) < 8:
-                complemento = "" 
+            if len(str(semillaCuadrado)) < 8: 
                 for relleno in range((8 - len(str(semillaCuadrado)))):
                     complemento += "0"
                 semillaCuadrado = complemento + str(semillaCuadrado)
@@ -26,14 +31,16 @@ def centrosCuadrados(semillaInicio, numerosAGenerar):
             
             numerosGenerados += 1
 
-        print(semillas)
-        print(generadores)
-        print(numerosAleatorios)
-        print(Ris)
+        creacionCarpeta("Centros_Cuadrados")
+        datos = [semillas, generadores, numerosAleatorios, Ris]
+        columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
+        carpetaArchivo = "Centros_Cuadrados"
+        escrituraCsv(datos, columnas, carpetaArchivo)
+
     else:
         print("La semilla otorgada no es un numero enetero de 4 digitos decimales" + "\n")
 
-def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar):
+def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, linealOMixto):
     if modulo > 0 and modulo > multiplicador and multiplicador > 0 and modulo > incremento and (incremento > 0 or incremento == 0) and modulo > semilla and (semilla > 0 or semilla == 0):
         numerosAleatorios = []
         Ris = []
@@ -53,17 +60,25 @@ def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar):
 
             numerosGenerados += 1
 
-        print(semillas)
-        print(generadores)
-        print(numerosAleatorios)
-        print(Ris)
+        if linealOMixto == 0:
+            creacionCarpeta("Congruencial")
+            datos = [semillas, generadores, numerosAleatorios, Ris]
+            columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
+            carpetaArchivo = "Congruencial"
+            escrituraCsv(datos, columnas, carpetaArchivo)
+        else:
+            creacionCarpeta("Congruencial_Mixto")
+            datos = [semillas, generadores, numerosAleatorios, Ris]
+            columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
+            carpetaArchivo = "Congruencial_Mixto"
+            escrituraCsv(datos, columnas, carpetaArchivo)
 
     else:
         print("El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero")
 
 def congruencialMixto(semilla, multiplicador, incremento, modulo, numerosAGenerar):
     if hullDobell(multiplicador, incremento, modulo):
-        congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar)
+        congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, 1)
     else:
         print("Los parametros no logran cumplir la evaluacion de Hull-Dobell")
 
@@ -118,10 +133,11 @@ def generadorMultiplicativo(semilla, multiplicador, modulo, numerosAGenerar):
             
             numerosGenerados += 1
 
-        print(semillas)
-        print(generadores)
-        print(numerosAleatorios)
-        print(Ris) 
+        creacionCarpeta("Generador_Multiplicativo")
+        datos = [semillas, generadores, numerosAleatorios, Ris]
+        columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
+        carpetaArchivo = "Generador_Multiplicativo"
+        escrituraCsv(datos, columnas, carpetaArchivo) 
     else:
         print("Los parametros introducidos por el usuario no cumplen las espeficaciones para este generador")     
 
@@ -133,6 +149,9 @@ def congruencialLinealCombinado(semillasOriginales, multiplicadores, modulos, nu
 
         Ris = []
         numerosAleatorios = []
+        semillasHistoricas = []
+        for semilla in range(0, len(modulos)):
+            semillasHistoricas.append([])
         numerosGenerados = 0
 
         while numerosGenerados < numerosAGenerar:
@@ -146,11 +165,30 @@ def congruencialLinealCombinado(semillasOriginales, multiplicadores, modulos, nu
             numeroAleatorio = numeroAleatorio % (modulos[0] - 1) #Misma cuestion de modulos
             numerosAleatorios.append(numeroAleatorio)
             Ris.append(numeroAleatorio / modulos[0]) #Ris se saca con modulos[0] o modulos[0] - 1
+            for semilla in range(0, len(modulos)):
+                semillasHistoricas[semilla].append(semillas[semilla])
             semillas = numerosTemporales
             numerosTemporales = []
             numerosGenerados += 1
 
-        print(numerosAleatorios)
+        creacionCarpeta("Lineal_Combinado")
+        datos = []
+        for semilla in range(0, len(modulos)):
+            datos.append(semillasHistoricas[semilla])
+        datos.append(numerosAleatorios)
+        datos.append(Ris)
+        indice = 1
+        columnas = []
+        for semilla in range(0, len(modulos)):
+            columnas.append("Semilla" + str(indice))
+            indice += 1
+        columnas.append("Aleatorio")
+        columnas.append("Ri")
+        carpetaArchivo = "Lineal_Combinado"
+        escrituraCsv(datos, columnas, carpetaArchivo)
+
+    else:
+        print("No se puede llevar acabo el el metodo ya que los parametros no cumplen con las especificaciones")
 
 def separacionValores(listaValores):
     arregloValores = []
@@ -180,19 +218,46 @@ def kolgomorovSmirnov():
     print("Hola")
 
 def creacionCarpeta(nombreCarpeta):
-    print("Hola")
+    pathActual = os.getcwd()
+    pathActual = pathActual.replace("\\", "/")
+    pathCarpeta = pathActual + "/" + nombreCarpeta + "/"
+    if os.path.exists(pathCarpeta):
+        pass
+    else:
+        os.mkdir(pathCarpeta)
 
-def escrituraCsv(datos, carpetaArchivo):
-    print("Hola")
+def escrituraCsv(datos, columnas, carpetaArchivo):
+    pathActual = os.getcwd()
+    pathActual = pathActual.replace("\\", "/")
+    pathActual = pathActual + "/" + carpetaArchivo + "/"
+
+    columnas = numpy.array([columnas])
+    t = time.localtime()
+    nombreArchivo = time.strftime("%H:%M:%S", t)
+    nombreArchivo = nombreArchivo.replace(":", "_") 
+    nombreArchivo += carpetaArchivo + ".csv"
+    nombreArchivo = pathActual + nombreArchivo
+
+    with open(nombreArchivo, "w", newline = "") as file:
+        escritor = csv.writer(file, delimiter = ",")
+        escritor.writerows(columnas)
+        for indices in range(0, len(datos[0])):
+            renglon = []
+            for indice in range(0, len(datos)):
+                renglon.append(datos[indice][indices])
+            renglon = numpy.array([renglon])
+            escritor.writerows(renglon)
 
 
-#centrosCuadrados("7589", 10)
-#congruencial(4,5,7,8,5)
+#centrosCuadrados("9575", 200)
+#congruencial(4,5,7,8,5,0)
 #congruencialMixto(4,8121,28411,134456,8)
 #generadorMultiplicativo(15,35,64,20)
-#congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399", 350)
+#congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399", 200)
 
 #print(hullDobell(5,7,8))
 #print(hullDobell(75,74,65537))
 #print(hullDobell(8121,28411,134456))
 #print(separacionValores("45678,3939, 20920, 292029282, 212,21292"))
+#creacionCarpeta("Centros_Cuadrados")
+#escrituraCsv([[4,5,6,7], [4,5,6,7],[4,5,6,7], [4,5,6,7]], ["Semilla", "Generador", "Aletorio", "Ri"], "Centros_Cuadrados")
