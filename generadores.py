@@ -2,6 +2,9 @@ import os
 import csv
 import numpy
 import time
+import math
+import decimal
+
 
 def centrosCuadrados(semillaInicio, numerosAGenerar):
     semilla = int(semillaInicio)
@@ -73,6 +76,8 @@ def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, li
             carpetaArchivo = "Congruencial_Mixto"
             escrituraCsv(datos, columnas, carpetaArchivo)
 
+        validacionChiCuadrada(Ris)
+
     else:
         print("El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero")
 
@@ -137,7 +142,10 @@ def generadorMultiplicativo(semilla, multiplicador, modulo, numerosAGenerar):
         datos = [semillas, generadores, numerosAleatorios, Ris]
         columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
         carpetaArchivo = "Generador_Multiplicativo"
-        escrituraCsv(datos, columnas, carpetaArchivo) 
+        escrituraCsv(datos, columnas, carpetaArchivo)
+
+        validacionChiCuadrada(Ris)
+
     else:
         print("Los parametros introducidos por el usuario no cumplen las espeficaciones para este generador")     
 
@@ -211,8 +219,61 @@ def separacionValores(listaValores):
         indice += 1
     return arregloValores 
 
-def validacionChiCuadrada():
-    print("Hola")
+def validacionChiCuadrada(numeros):
+    numeros.sort()
+    numeroMenor = numeros[0]
+    numeroMayor = numeros[len(numeros) - 1]
+    rango = numeroMayor - numeroMenor
+    k = math.floor(1 + (3.322 * math.log10(len(numeros))))
+    sizeClase = round(rango / k, 5)
+    
+    limitesClases = []
+    bandera = 0
+    while bandera <= numeroMayor:
+        limitesClases.append([round(bandera, 5), round(bandera + sizeClase, 5)])
+        bandera += sizeClase
+    frecuenciasAbsolutas = []
+    for intervalo in limitesClases:
+        frecuenciasAbsolutas.append(sum(map(lambda x: x >= intervalo[0] and x < intervalo[1], numeros)))
+
+    #print(limitesClases)
+    #print(frecuenciasAbsolutas)
+    
+    limitesClases = reasignacionClases(limitesClases, frecuenciasAbsolutas)[0]
+    frecuenciasAbsolutas = reasignacionClases(limitesClases, frecuenciasAbsolutas)[1]
+
+    probabilidades = []
+    frecuenciasEsperadas = []
+    elementosEstadisticoPrueba = []
+    for indice in range(0, len(frecuenciasAbsolutas)):
+        if indice != len(frecuenciasAbsolutas) - 1:
+            probabilidades.append(1*(limitesClases[indice][1] - limitesClases[indice][0]))
+            frecuenciasEsperadas.append(round(len(numeros) * probabilidades[indice], 3))
+        else:
+            probabilidades.append(1 - sum(probabilidades))
+            frecuenciasEsperadas.append(round(len(numeros) - sum(frecuenciasEsperadas), 3))
+        elementosEstadisticoPrueba.append(round(math.pow((frecuenciasAbsolutas[indice] - frecuenciasEsperadas[indice]),2) / frecuenciasEsperadas[indice], 5)) 
+    
+    #print(limitesClases)
+    print(frecuenciasAbsolutas)
+    print(frecuenciasEsperadas)
+    #print(elementosEstadisticoPrueba)
+    estadisticoPrueba = round(sum(elementosEstadisticoPrueba), 5)
+    print(estadisticoPrueba)
+    gradosLibertad = (k - 1) 
+    print(gradosLibertad)
+
+def reasignacionClases(limitesClases, frecuenciasAbsolutas):
+    for indice in range(0, len(frecuenciasAbsolutas)):
+        if frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
+            while frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
+                frecuenciasAbsolutas[indice] += frecuenciasAbsolutas[indice + 1]
+                limitesClases[indice][1] = limitesClases[indice + 1][1]
+                frecuenciasAbsolutas.pop(indice + 1)
+                limitesClases.pop(indice + 1)
+        if indice >= len(frecuenciasAbsolutas) - 1:
+            break
+    return [limitesClases, frecuenciasAbsolutas]    
 
 def kolgomorovSmirnov():
     print("Hola")
@@ -250,9 +311,9 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
 
 
 #centrosCuadrados("9575", 200)
-#congruencial(4,5,7,8,5,0)
+congruencial(4,5,7,10000,8000,0)
 #congruencialMixto(4,8121,28411,134456,8)
-#generadorMultiplicativo(15,35,64,20)
+#generadorMultiplicativo(15,35,64,25)
 #congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399", 200)
 
 #print(hullDobell(5,7,8))
@@ -261,3 +322,4 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
 #print(separacionValores("45678,3939, 20920, 292029282, 212,21292"))
 #creacionCarpeta("Centros_Cuadrados")
 #escrituraCsv([[4,5,6,7], [4,5,6,7],[4,5,6,7], [4,5,6,7]], ["Semilla", "Generador", "Aletorio", "Ri"], "Centros_Cuadrados")
+#validacionChiCuadrada([4,8,1,0.02,3,1,78,76,65,11,12,32,41])
