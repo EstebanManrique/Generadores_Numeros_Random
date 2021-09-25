@@ -2,12 +2,18 @@
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkFont
+import os
+import csv
+import numpy
+import time
+import math
+import decimal
 
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.geometry("920x450")
+        self.geometry("1000x450")
         self.title('Generador de Números Aleatorios')
 
         # initialize data
@@ -22,6 +28,9 @@ class App(tk.Tk):
         
         self.option.set(self.menu[0])
         
+        self.chi=tk.IntVar()
+        self.kov=tk.IntVar()
+        
         # create widget
         self.create_wigets()
 
@@ -33,7 +42,7 @@ class App(tk.Tk):
         label = ttk.Label(self,  text='SIMULADOR DE NUMEROS RANDOM',font = ("Castellar",15))
         label.grid(column=0, row=0, sticky=tk.W, **paddings)
 
-        self.frame = tk.LabelFrame(self,text="Método de los Centros Cuadrados", borderwidth=8, padx=100, pady=50, labelanchor = "nw", font = ("Castellar",12))
+        self.frame = tk.LabelFrame(self,text="Método de los Centros Cuadrados", borderwidth=8, padx=175, pady=50, labelanchor = "nw", font = ("Castellar",12))
         self.frame.place(x=10, y=70)
 
         # option menu
@@ -48,6 +57,81 @@ class App(tk.Tk):
         
         option_menu.place(x=585, y=10)
 
+    def reasignacionClases(self,limitesClases, frecuenciasAbsolutas):
+            for indice in range(0, len(frecuenciasAbsolutas)):
+                if frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
+                    while frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
+                        frecuenciasAbsolutas[indice] += frecuenciasAbsolutas[indice + 1]
+                        limitesClases[indice][1] = limitesClases[indice + 1][1]
+                        frecuenciasAbsolutas.pop(indice + 1)
+                        limitesClases.pop(indice + 1)
+                if indice >= len(frecuenciasAbsolutas) - 1:
+                    break
+            return [limitesClases, frecuenciasAbsolutas]    
+    
+    def chi_frame(self,event):
+        
+        chiFrame = tk.Toplevel()
+        chiFrame.title("Resultados")
+        
+    def validacionChiCuadrada(self,numeros,resultados):
+        numeros.sort()
+        numeroMenor = numeros[0]  #RANGO
+        numeroMayor = numeros[len(numeros) - 1]  #RANGO
+        rango = numeroMayor - numeroMenor #RANGO
+        k = math.floor(1 + (3.322 * math.log10(len(numeros))))
+        sizeClase = round(rango / k, 5)  #Clase (Longuitud)
+        
+        limitesClases = []
+        bandera = 0
+        while bandera <= numeroMayor:
+            limitesClases.append([round(bandera, 5), round(bandera + sizeClase, 5)])
+            bandera += sizeClase
+        frecuenciasAbsolutas = []
+        for intervalo in limitesClases:
+            frecuenciasAbsolutas.append(sum(map(lambda x: x >= intervalo[0] and x < intervalo[1], numeros)))
+    
+        #print(limitesClases)
+        #print(frecuenciasAbsolutas)
+        
+        limitesClases = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[0] #Columna 2
+        frecuenciasAbsolutas = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[1]
+    
+        probabilidades = [] #Columna 4
+        frecuenciasEsperadas = []
+        elementosEstadisticoPrueba = []
+        for indice in range(0, len(frecuenciasAbsolutas)):
+            if indice != len(frecuenciasAbsolutas) - 1:
+                probabilidades.append(1*(limitesClases[indice][1] - limitesClases[indice][0]))
+                frecuenciasEsperadas.append(round(len(numeros) * probabilidades[indice], 3))
+            else:
+                probabilidades.append(1 - sum(probabilidades))
+                frecuenciasEsperadas.append(round(len(numeros) - sum(frecuenciasEsperadas), 3))
+            elementosEstadisticoPrueba.append(round(math.pow((frecuenciasAbsolutas[indice] - frecuenciasEsperadas[indice]),2) / frecuenciasEsperadas[indice], 5)) 
+        
+        #print(limitesClases)
+        print(frecuenciasAbsolutas) #Columna 3
+        print(frecuenciasEsperadas) #Columna 5
+        #print(elementosEstadisticoPrueba) #Columna 6
+        estadisticoPrueba = round(sum(elementosEstadisticoPrueba), 5)
+        print(estadisticoPrueba)
+        gradosLibertad = (k - 1) 
+        print(gradosLibertad) 
+        
+        condicion=0
+        
+        label = tk.Label(resultados, text="Chi-Cuadrada", font=("Arial",17)).grid(row=2, column=0)
+        if condicion==1:
+            label2 = tk.Label(resultados, text=str(gradosLibertad), font=("Arial",17), fg="green")
+            label2.grid(row=2, column=1)
+            label2.bind("<Button-1>", self.chi_frame)
+        else:
+            label2 = tk.Label(resultados, text=str(gradosLibertad), font=("Arial",17), fg="red")
+            label2.grid(row=2, column=1)
+            label2.bind("<Button-1>", self.chi_frame)
+        
+
+        
 
     def centrosCuadrados(self, semillaInicio, numerosAGenerar):
        semilla = int(semillaInicio)
@@ -136,6 +220,13 @@ class App(tk.Tk):
             vsb=ttk.Scrollbar(results, orient="vertical", command=table.yview)
             vsb.place(relx=0.978, rely=0.2, relheight=0.8, relwidth=0.020)
             table.configure(yscrollcommand=vsb.set)
+            
+            print(self.chi.get())
+            
+            if self.chi.get() == 1:
+                self.validacionChiCuadrada(Ris,results)
+                
+                
         else:
             print("El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero")
             
@@ -328,6 +419,13 @@ class App(tk.Tk):
         total_input = ttk.Entry(self.frame, width=20)
         total_input.grid(column=1,row=4) 
         
+        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada",variable=self.chi)
+        chi_cuadrada.place(relx=-0.4, rely=0.0)
+        
+        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
+        kolmogorov.place(relx=-0.4, rely=0.3)
+        
+        
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
                               font = ("Castellar",8),  
@@ -370,6 +468,13 @@ class App(tk.Tk):
         total_input = ttk.Entry(self.frame, width=20)
         total_input.grid(column=1,row=4) 
         
+        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada", variable=self.chi)
+        chi_cuadrada.place(relx=-0.4, rely=0.0)
+        
+        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
+        kolmogorov.place(relx=-0.4, rely=0.3)
+        
+        
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
                               font = ("Castellar",8),  
@@ -404,6 +509,13 @@ class App(tk.Tk):
         total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
         total_input = ttk.Entry(self.frame, width=20)  
         total_input.grid(column=1,row=3)  
+        
+        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada", variable=self.chi)
+        chi_cuadrada.place(relx=-0.4, rely=0.0)
+        
+        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
+        kolmogorov.place(relx=-0.4, rely=0.3)
+        
         
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
