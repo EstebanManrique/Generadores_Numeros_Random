@@ -22,11 +22,19 @@ class App(tk.Tk):
       "Método Congruencial Mixto",
       "Generador Multiplicativo",
       "Método Congruencial Lineal Combinado")
+        
+        self.porcentajes=(
+            "99.5%", "99%", "97.5%", "95%", "90%", "75%", "50%", "25%", "10%", "5%", "2.5%", "1%", "0.5%"
+            )
 
         # set up variable
         self.option = tk.StringVar(self)
         
         self.option.set(self.menu[0])
+        
+        self.option2 = tk.StringVar(self)
+        
+        self.option2.set(self.porcentajes[0])
         
         self.chi=tk.IntVar()
         self.kov=tk.IntVar()
@@ -57,6 +65,38 @@ class App(tk.Tk):
         
         option_menu.place(x=585, y=10)
 
+    def creacionCarpeta(self,nombreCarpeta):
+        pathActual = os.getcwd()
+        pathActual = pathActual.replace("\\", "/")
+        pathCarpeta = pathActual + "/" + nombreCarpeta + "/"
+        if os.path.exists(pathCarpeta):
+            pass
+        else:
+            os.mkdir(pathCarpeta)
+    
+    def escrituraCsv(self,datos, columnas, carpetaArchivo):
+        pathActual = os.getcwd()
+        pathActual = pathActual.replace("\\", "/")
+        pathActual = pathActual + "/" + carpetaArchivo + "/"
+    
+        columnas = numpy.array([columnas])
+        t = time.localtime()
+        nombreArchivo = time.strftime("%H:%M:%S", t)
+        nombreArchivo = nombreArchivo.replace(":", "_") 
+        nombreArchivo += carpetaArchivo + ".csv"
+        nombreArchivo = pathActual + nombreArchivo
+    
+        with open(nombreArchivo, "w", newline = "") as file:
+            escritor = csv.writer(file, delimiter = ",")
+            escritor.writerows(columnas)
+            for indices in range(0, len(datos[0])):
+                renglon = []
+                for indice in range(0, len(datos)):
+                    renglon.append(datos[indice][indices])
+                renglon = numpy.array([renglon])
+                escritor.writerows(renglon)
+
+
     def reasignacionClases(self,limitesClases, frecuenciasAbsolutas):
             for indice in range(0, len(frecuenciasAbsolutas)):
                 if frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
@@ -69,10 +109,92 @@ class App(tk.Tk):
                     break
             return [limitesClases, frecuenciasAbsolutas]    
     
-    def chi_frame(self,event):
+    def chi_frame(self,menor,mayor,claseLongitud,clases,fo,fe,prob,grados,aprob,formula,clasesSinAjuste,feSinAjuste):
         
         chiFrame = tk.Toplevel()
-        chiFrame.title("Resultados")
+        chiFrame.title("Chi-Cuadrada")
+        
+        label = tk.Label(chiFrame, text="Rango: ", font=("Arial",17),padx=15, pady=15)
+        label.grid(row=0,column=0)
+        labelRango = tk.Label(chiFrame, text=(menor+" - "+mayor), font=("Arial",15),padx=15, pady=15)
+        labelRango.grid(row=0,column=1)
+        
+        label2 = tk.Label(chiFrame, text="Clase (Longuitud): ", font=("Arial",17),padx=15, pady=15)
+        label2.grid(row=2,column=0)
+        labelClase = tk.Label(chiFrame, text=str(claseLongitud), font=("Arial",15),padx=15, pady=15)
+        labelClase.grid(row=2,column=1)
+        
+        label3 = tk.Label(chiFrame, text="K: ", font=("Arial",17),padx=15, pady=15)
+        label3.grid(row=1,column=0)
+        labelK = tk.Label(chiFrame, text=str(len(clases)), font=("Arial",15),padx=15, pady=15)
+        labelK.grid(row=1,column=1)
+        
+        labelBlank = tk.Label(chiFrame, text="  ", font=("Arial",17),padx=15, pady=15)
+        labelBlank.grid(row=3,column=0)
+        
+        labelTable = tk.Label(chiFrame, text="Clases Sin Ajustar", font=("Arial",17),padx=15, pady=15)
+        labelTable.place(x=200,y=180)
+        
+        cols = ('K','Clase', 'FOi observado', 'Probabilidad', 'FEi esperado', '(FO - FE)^2/FE')
+        cols2 = ('K','Clase','FOi observado')
+        #, '(FO - FE)^2/FE'
+        
+        clasesStr=[]
+        clasesStr2=[]
+        
+        if(aprob==1):
+            color="green"
+        else:
+            color="red"
+        
+        for x in range(len(clases)):
+            aux=""
+            aux=str(clases[x][0])+" - " + str(clases[x][1]) 
+            clasesStr.append(aux)
+            
+        for x in range(len(clasesSinAjuste)):
+            aux=""
+            aux=str(clasesSinAjuste[x][0])+" - " + str(clasesSinAjuste[x][1]) 
+            clasesStr2.append(aux)
+
+        table = ttk.Treeview(chiFrame, columns=cols, show='headings',selectmode='browse')
+        
+        table2 = ttk.Treeview(chiFrame, columns=cols2, show='headings',selectmode='browse')
+       
+        for col in cols:
+            table.heading(col, text=col,anchor="center") 
+            table.column(col, stretch=0, anchor="center")
+            
+        for col in cols2:
+            table2.heading(col, text=col,anchor="center") 
+            table2.column(col, stretch=0, anchor="center")
+           
+        for x in range(len(clases)):
+            table.insert("", "end", values=(x,clasesStr[x],fo[x],prob[x],fe[x],formula[x]))
+            
+        for x in range(len(clasesSinAjuste)):
+            table2.insert("", "end", values=(x,clasesStr2[x],feSinAjuste[x]))
+            
+        table2.grid(row=4, column=0,columnspan=5)
+        table.grid(row=5, column=0, columnspan=2)
+        
+        vsb=ttk.Scrollbar(chiFrame, orient="vertical", command=table.yview)
+        vsb.place(relx=0.98, rely=0.58, relheight=0.27, relwidth=0.020)
+        table.configure(yscrollcommand=vsb.set)
+
+        vsb2=ttk.Scrollbar(chiFrame, orient="vertical", command=table2.yview)
+        vsb2.place(relx=0.73, rely=0.30, relheight=0.268, relwidth=0.020)
+        table2.configure(yscrollcommand=vsb2.set)
+        
+        label4 = tk.Label(chiFrame, text="Grados de Libertdad: ", font=("Arial",17),padx=15, pady=15)
+        label4.grid(row=6,column=0)
+        labelGrados = tk.Label(chiFrame, text=str(grados), font=("Arial",15),padx=15, pady=15)
+        labelGrados.grid(row=6,column=1)
+        
+        label5 = tk.Label(chiFrame, text="Estadístico Prueba: ", font=("Arial",17),padx=15, pady=15)
+        label5.grid(row=7,column=0)
+        labelEst = tk.Label(chiFrame, text="3 < 5", font=("Arial",15),padx=15, pady=15,bg=color)
+        labelEst.grid(row=7,column=1)
         
     def validacionChiCuadrada(self,numeros,resultados):
         numeros.sort()
@@ -93,6 +215,8 @@ class App(tk.Tk):
     
         #print(limitesClases)
         #print(frecuenciasAbsolutas)
+        clasesSinAjuste=limitesClases
+        feSinAjuste=frecuenciasAbsolutas
         
         limitesClases = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[0] #Columna 2
         frecuenciasAbsolutas = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[1]
@@ -109,7 +233,7 @@ class App(tk.Tk):
                 frecuenciasEsperadas.append(round(len(numeros) - sum(frecuenciasEsperadas), 3))
             elementosEstadisticoPrueba.append(round(math.pow((frecuenciasAbsolutas[indice] - frecuenciasEsperadas[indice]),2) / frecuenciasEsperadas[indice], 5)) 
         
-        #print(limitesClases)
+        
         print(frecuenciasAbsolutas) #Columna 3
         print(frecuenciasEsperadas) #Columna 5
         #print(elementosEstadisticoPrueba) #Columna 6
@@ -117,18 +241,26 @@ class App(tk.Tk):
         print(estadisticoPrueba)
         gradosLibertad = (k - 1) 
         print(gradosLibertad) 
-        
-        condicion=0
+
+        numeroMenorStr=str(numeroMenor)
+        numeroMayorStr=str(numeroMayor)
+        condicion=1
         
         label = tk.Label(resultados, text="Chi-Cuadrada", font=("Arial",17)).grid(row=2, column=0)
         if condicion==1:
             label2 = tk.Label(resultados, text=str(gradosLibertad), font=("Arial",17), fg="green")
             label2.grid(row=2, column=1)
-            label2.bind("<Button-1>", self.chi_frame)
+            label2.bind("<Button-1>", lambda event, a=numeroMenorStr, b=numeroMayorStr, c=sizeClase, d=limitesClases, 
+                        e=frecuenciasAbsolutas, f=frecuenciasEsperadas, g=probabilidades, h=gradosLibertad, i=condicion, j=elementosEstadisticoPrueba,
+                        k=clasesSinAjuste, l=feSinAjuste:
+                        self.chi_frame(a,b,c,d,e,f,g,h,i,j,k,l) )
         else:
             label2 = tk.Label(resultados, text=str(gradosLibertad), font=("Arial",17), fg="red")
             label2.grid(row=2, column=1)
-            label2.bind("<Button-1>", self.chi_frame)
+            label2.bind("<Button-1>", lambda event, a=numeroMenorStr, b=numeroMayorStr, c=sizeClase, d=limitesClases, 
+                        e=frecuenciasAbsolutas, f=frecuenciasEsperadas, g=probabilidades, h=gradosLibertad, i=condicion, j=elementosEstadisticoPrueba,
+                        k=clasesSinAjuste, l=feSinAjuste: 
+                        self.chi_frame(a,b,c,d,e,f,g,h,i,j,k,l) )
         
 
         
@@ -163,6 +295,11 @@ class App(tk.Tk):
                 
                numerosGenerados += 1
         
+           self.creacionCarpeta("Centros_Cuadrados")
+           datos = [semillas, generadores, numerosAleatorios, Ris]
+           columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
+           carpetaArchivo = "Centros_Cuadrados"
+           self.escrituraCsv(datos, columnas, carpetaArchivo)
            
            results = tk.Toplevel()
            results.title("Resultados")
@@ -204,6 +341,21 @@ class App(tk.Tk):
     
                 numerosGenerados += 1
     
+            
+            if titulo == "Congurencial Lineal":
+                self.creacionCarpeta("Congruencial")
+                datos = [semillas, generadores, numerosAleatorios, Ris]
+                columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
+                carpetaArchivo = "Congruencial"
+                self.escrituraCsv(datos, columnas, carpetaArchivo)
+            else:
+                self.creacionCarpeta("Congruencial_Mixto")
+                datos = [semillas, generadores, numerosAleatorios, Ris]
+                columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
+                carpetaArchivo = "Congruencial_Mixto"
+                self.escrituraCsv(datos, columnas, carpetaArchivo)
+            
+            
             results = tk.Toplevel()
             results.title("Resultados")
             cols = ('Xn','Semilla', 'Generador', 'No. Aleatorio', 'Ri')
@@ -287,13 +439,19 @@ class App(tk.Tk):
                 semilla = numeroAleatorio
                 
                 numerosGenerados += 1
-    
+            
+            self.creacionCarpeta("Generador_Multiplicativo")
+            datos = [semillas, generadores, numerosAleatorios, Ris]
+            columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
+            carpetaArchivo = "Generador_Multiplicativo"
+            self.escrituraCsv(datos, columnas, carpetaArchivo)
+            
             results = tk.Toplevel()
             results.title("Resultados")
             cols = ('Xn','Semilla', 'Generador', 'No. Aleatorio', 'Ri')
             label = tk.Label(results, text="Generador Multiplicativo", font=("Arial",30)).grid(row=0, columnspan=3)
             table = ttk.Treeview(results, columns=cols, show='headings',selectmode='browse')
-           
+            
             for col in cols:
                 table.heading(col, text=col)  
                
@@ -304,6 +462,9 @@ class App(tk.Tk):
             vsb=ttk.Scrollbar(results, orient="vertical", command=table.yview)
             vsb.place(relx=0.978, rely=0.2, relheight=0.8, relwidth=0.020)
             table.configure(yscrollcommand=vsb.set)
+            
+            if self.chi.get() == 1:
+                self.validacionChiCuadrada(Ris,results)
         else:
             print("Los parametros introducidos por el usuario no cumplen las espeficaciones para este generador") 
     
@@ -329,7 +490,6 @@ class App(tk.Tk):
         return arregloValores 
     
     def congruencialLinealCombinado(self,semillasOriginales, multiplicadores, modulos, numerosAGenerar):
-        print("hello")
         if(self.separacionValores(semillasOriginales) != False and self.separacionValores(multiplicadores) != False and self.separacionValores(modulos) != False): 
             semillas = self.separacionValores(semillasOriginales)
             multiplicadores = self.separacionValores(multiplicadores)
@@ -337,6 +497,9 @@ class App(tk.Tk):
     
             Ris = []
             numerosAleatorios = []
+            semillasHistoricas = []
+            for semilla in range(0, len(modulos)):
+                semillasHistoricas.append([])
             numerosGenerados = 0
     
             while numerosGenerados < numerosAGenerar:
@@ -350,21 +513,40 @@ class App(tk.Tk):
                 numeroAleatorio = numeroAleatorio % (modulos[0] - 1) #Misma cuestion de modulos
                 numerosAleatorios.append(numeroAleatorio)
                 Ris.append(numeroAleatorio / modulos[0]) #Ris se saca con modulos[0] o modulos[0] - 1
+                for semilla in range(0, len(modulos)):
+                    semillasHistoricas[semilla].append(semillas[semilla])
                 semillas = numerosTemporales
                 numerosTemporales = []
                 numerosGenerados += 1
+                
+            self.creacionCarpeta("Lineal_Combinado")
+            datos = []
+            for semilla in range(0, len(modulos)):
+                datos.append(semillasHistoricas[semilla])
+            datos.append(numerosAleatorios)
+            datos.append(Ris)
+            indice = 1
+            columnas = []
+            for semilla in range(0, len(modulos)):
+                columnas.append("Semilla" + str(indice))
+                indice += 1
+            columnas.append("Aleatorio")
+            columnas.append("Ri")
+            carpetaArchivo = "Lineal_Combinado"
+            self.escrituraCsv(datos, columnas, carpetaArchivo)
     
             results = tk.Toplevel()
             results.title("Resultados")
             cols = ('Xn','No. Aleatorio')
             label = tk.Label(results, text="Generador Lineal Combinado", font=("Arial",30)).grid(row=0, columnspan=3)
-            table = ttk.Treeview(results, columns=cols, show='headings',selectmode='browse')
+            table = ttk.Treeview(results, columns=columnas, show='headings',selectmode='browse')
            
-            for col in cols:
+            for col in columnas:
                 table.heading(col, text=col)  
-               
+            
+
             for x in range(len(numerosAleatorios)):
-                table.insert("", "end", values=(x, numerosAleatorios[x]))
+                table.insert("", "end", values=([y[x] for y in datos]) )
                
             table.grid(row=1, column=0, columnspan=2)
             vsb=ttk.Scrollbar(results, orient="vertical", command=table.yview)
@@ -423,7 +605,18 @@ class App(tk.Tk):
         chi_cuadrada.place(relx=-0.4, rely=0.0)
         
         kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
-        kolmogorov.place(relx=-0.4, rely=0.3)
+        kolmogorov.place(relx=-0.4, rely=0.2)
+        
+        
+        porcentaje_Menu = tk.OptionMenu(
+            self.frame,
+            self.option2,
+            *self.porcentajes,
+           )
+        
+        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
+        porcentaje_Menu.config(font=helv36)
+        porcentaje_Menu.place(relx=-0.4, rely=0.4)
         
         
         sumbit_btn= tk.Button(self.frame, 
@@ -472,8 +665,17 @@ class App(tk.Tk):
         chi_cuadrada.place(relx=-0.4, rely=0.0)
         
         kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
-        kolmogorov.place(relx=-0.4, rely=0.3)
+        kolmogorov.place(relx=-0.4, rely=0.20)
         
+        porcentaje_Menu = tk.OptionMenu(
+            self.frame,
+            self.option2,
+            *self.porcentajes,
+           )
+        
+        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
+        porcentaje_Menu.config(font=helv36)
+        porcentaje_Menu.place(relx=-0.4, rely=0.4)
         
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
@@ -514,8 +716,17 @@ class App(tk.Tk):
         chi_cuadrada.place(relx=-0.4, rely=0.0)
         
         kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
-        kolmogorov.place(relx=-0.4, rely=0.3)
+        kolmogorov.place(relx=-0.4, rely=0.2)
         
+        porcentaje_Menu = tk.OptionMenu(
+            self.frame,
+            self.option2,
+            *self.porcentajes,
+           )
+        
+        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
+        porcentaje_Menu.config(font=helv36)
+        porcentaje_Menu.place(relx=-0.4, rely=0.4)
         
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
