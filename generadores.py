@@ -4,7 +4,14 @@ import numpy
 import time
 import math
 import decimal
+import matplot
+from scipy.stats import chi2
 
+errorPercentages = numpy.array([0.995, 0.99, 0.975, 0.95, 0.90, 0.75, 0.5, 0.25, 0.10, 0.05, 0.025, 0.01, 0.005]) #99.5%, 99%, 97.5%, 95%, 90%, 75%, 50%, 25%, 10%, 5%, 2.5%, 1%, 0.5% 
+tablaChiCuadrada = numpy.array(range(1,100)).reshape(-1,1)
+tablaChiCuadrada = chi2.isf(errorPercentages, tablaChiCuadrada)
+print(round(tablaChiCuadrada[2,2], 5))
+indiceErrores = 2
 
 def centrosCuadrados(semillaInicio, numerosAGenerar):
     semilla = int(semillaInicio)
@@ -43,7 +50,7 @@ def centrosCuadrados(semillaInicio, numerosAGenerar):
     else:
         print("La semilla otorgada no es un numero enetero de 4 digitos decimales" + "\n")
 
-def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, linealOMixto):
+def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, linealOMixto, chiCuadrada, kolmogorovSmirnov):
     if modulo > 0 and modulo > multiplicador and multiplicador > 0 and modulo > incremento and (incremento > 0 or incremento == 0) and modulo > semilla and (semilla > 0 or semilla == 0):
         numerosAleatorios = []
         Ris = []
@@ -76,14 +83,17 @@ def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, li
             carpetaArchivo = "Congruencial_Mixto"
             escrituraCsv(datos, columnas, carpetaArchivo)
 
-        validacionChiCuadrada(Ris)
+        if chiCuadrada == 1:
+            validacionChiCuadrada(Ris, indiceErrores)
+        if kolmogorovSmirnov == 1: 
+            kolgomorovSmirnov(Ris)
 
     else:
         print("El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero")
 
-def congruencialMixto(semilla, multiplicador, incremento, modulo, numerosAGenerar):
+def congruencialMixto(semilla, multiplicador, incremento, modulo, numerosAGenerar, chiCuadrada, kolmogorovSmirnov):
     if hullDobell(multiplicador, incremento, modulo):
-        congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, 1)
+        congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, 1, chiCuadrada, kolmogorovSmirnov)
     else:
         print("Los parametros no logran cumplir la evaluacion de Hull-Dobell")
 
@@ -118,7 +128,7 @@ def numeroPrimo(numero):
             return False
     return True
 
-def generadorMultiplicativo(semilla, multiplicador, modulo, numerosAGenerar):
+def generadorMultiplicativo(semilla, multiplicador, modulo, numerosAGenerar, chiCuadrada, kolmogorovSmirnov):
     if (semilla == 0 or semilla > 0) and (multiplicador == 0 or multiplicador > 0) and (modulo == 0 or modulo > 0) and modulo > multiplicador and modulo > semilla and float(semilla).is_integer() and float(multiplicador).is_integer() and float(modulo).is_integer():
         numerosAleatorios = []
         Ris = []
@@ -144,7 +154,10 @@ def generadorMultiplicativo(semilla, multiplicador, modulo, numerosAGenerar):
         carpetaArchivo = "Generador_Multiplicativo"
         escrituraCsv(datos, columnas, carpetaArchivo)
 
-        validacionChiCuadrada(Ris)
+        if chiCuadrada == 1:
+            validacionChiCuadrada(Ris, indiceErrores)
+        if kolmogorovSmirnov == 1: 
+            kolgomorovSmirnov(Ris)
 
     else:
         print("Los parametros introducidos por el usuario no cumplen las espeficaciones para este generador")     
@@ -219,13 +232,13 @@ def separacionValores(listaValores):
         indice += 1
     return arregloValores 
 
-def validacionChiCuadrada(numeros):
+def validacionChiCuadrada(numeros, porcentajeError):
     numeros.sort()
-    numeroMenor = numeros[0]  #RANGO
-    numeroMayor = numeros[len(numeros) - 1]  #RANGO
-    rango = numeroMayor - numeroMenor #RANGO
+    numeroMenor = numeros[0]
+    numeroMayor = numeros[len(numeros) - 1]
+    rango = numeroMayor - numeroMenor
     k = math.floor(1 + (3.322 * math.log10(len(numeros))))
-    sizeClase = round(rango / k, 5)  #Clase (Longuitud)
+    sizeClase = round(rango / k, 5)
     
     limitesClases = []
     bandera = 0
@@ -239,10 +252,10 @@ def validacionChiCuadrada(numeros):
     #print(limitesClases)
     #print(frecuenciasAbsolutas)
     
-    limitesClases = reasignacionClases(limitesClases, frecuenciasAbsolutas)[0] #Columna 2
+    limitesClases = reasignacionClases(limitesClases, frecuenciasAbsolutas)[0]
     frecuenciasAbsolutas = reasignacionClases(limitesClases, frecuenciasAbsolutas)[1]
 
-    probabilidades = [] #Columna 4
+    probabilidades = []
     frecuenciasEsperadas = []
     elementosEstadisticoPrueba = []
     for indice in range(0, len(frecuenciasAbsolutas)):
@@ -255,13 +268,14 @@ def validacionChiCuadrada(numeros):
         elementosEstadisticoPrueba.append(round(math.pow((frecuenciasAbsolutas[indice] - frecuenciasEsperadas[indice]),2) / frecuenciasEsperadas[indice], 5)) 
     
     #print(limitesClases)
-    print(frecuenciasAbsolutas) #Columna 3
-    print(frecuenciasEsperadas) #Columna 5
-    #print(elementosEstadisticoPrueba) #Columna 6
+    print(frecuenciasAbsolutas)
+    print(frecuenciasEsperadas)
+    #print(elementosEstadisticoPrueba)
     estadisticoPrueba = round(sum(elementosEstadisticoPrueba), 5)
     print(estadisticoPrueba)
     gradosLibertad = (k - 1) 
-    print(gradosLibertad) 
+    estadisticoChiCuadrada = round(tablaChiCuadrada[porcentajeError,(gradosLibertad-1)], 5)
+    print(estadisticoChiCuadrada)
 
 def reasignacionClases(limitesClases, frecuenciasAbsolutas):
     for indice in range(0, len(frecuenciasAbsolutas)):
@@ -275,7 +289,7 @@ def reasignacionClases(limitesClases, frecuenciasAbsolutas):
             break
     return [limitesClases, frecuenciasAbsolutas]    
 
-def kolgomorovSmirnov():
+def kolgomorovSmirnov(numeros):
     print("Hola")
 
 def creacionCarpeta(nombreCarpeta):
@@ -311,10 +325,10 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
 
 
 #centrosCuadrados("9575", 200)
-congruencial(4,5,7,10000,8000,0)
+#congruencial(4,5,7,8,8,0)
 #congruencialMixto(4,8121,28411,134456,8)
 #generadorMultiplicativo(15,35,64,25)
-#congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399", 200)
+congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399", 20)
 
 #print(hullDobell(5,7,8))
 #print(hullDobell(75,74,65537))
