@@ -221,11 +221,11 @@ def separacionValores(listaValores):
 
 def validacionChiCuadrada(numeros):
     numeros.sort()
-    numeroMenor = numeros[0]
-    numeroMayor = numeros[len(numeros) - 1]
-    rango = numeroMayor - numeroMenor
+    numeroMenor = numeros[0]  #RANGO
+    numeroMayor = numeros[len(numeros) - 1]  #RANGO
+    rango = numeroMayor - numeroMenor #RANGO
     k = math.floor(1 + (3.322 * math.log10(len(numeros))))
-    sizeClase = round(rango / k, 5)
+    sizeClase = round(rango / k, 5)  #Clase (Longuitud)
     
     limitesClases = []
     bandera = 0
@@ -239,10 +239,10 @@ def validacionChiCuadrada(numeros):
     #print(limitesClases)
     #print(frecuenciasAbsolutas)
     
-    limitesClases = reasignacionClases(limitesClases, frecuenciasAbsolutas)[0]
+    limitesClases = reasignacionClases(limitesClases, frecuenciasAbsolutas)[0] #Columna 2
     frecuenciasAbsolutas = reasignacionClases(limitesClases, frecuenciasAbsolutas)[1]
 
-    probabilidades = []
+    probabilidades = [] #Columna 4
     frecuenciasEsperadas = []
     elementosEstadisticoPrueba = []
     for indice in range(0, len(frecuenciasAbsolutas)):
@@ -255,13 +255,13 @@ def validacionChiCuadrada(numeros):
         elementosEstadisticoPrueba.append(round(math.pow((frecuenciasAbsolutas[indice] - frecuenciasEsperadas[indice]),2) / frecuenciasEsperadas[indice], 5)) 
     
     #print(limitesClases)
-    print(frecuenciasAbsolutas)
-    print(frecuenciasEsperadas)
-    #print(elementosEstadisticoPrueba)
+    print(frecuenciasAbsolutas) #Columna 3
+    print(frecuenciasEsperadas) #Columna 5
+    #print(elementosEstadisticoPrueba) #Columna 6
     estadisticoPrueba = round(sum(elementosEstadisticoPrueba), 5)
     print(estadisticoPrueba)
     gradosLibertad = (k - 1) 
-    print(gradosLibertad)
+    print(gradosLibertad) 
 
 def reasignacionClases(limitesClases, frecuenciasAbsolutas):
     for indice in range(0, len(frecuenciasAbsolutas)):
