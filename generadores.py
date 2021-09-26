@@ -4,18 +4,16 @@ import numpy
 import time
 import math
 import decimal
-import matplot
 from scipy.stats import chi2
 
 errorPercentages = numpy.array([0.995, 0.99, 0.975, 0.95, 0.90, 0.75, 0.5, 0.25, 0.10, 0.05, 0.025, 0.01, 0.005]) #99.5%, 99%, 97.5%, 95%, 90%, 75%, 50%, 25%, 10%, 5%, 2.5%, 1%, 0.5% 
 tablaChiCuadrada = numpy.array(range(1,100)).reshape(-1,1)
 tablaChiCuadrada = chi2.isf(errorPercentages, tablaChiCuadrada)
-print(round(tablaChiCuadrada[2,2], 5))
 indiceErrores = 2
 
 def centrosCuadrados(semillaInicio, numerosAGenerar):
     semilla = int(semillaInicio)
-    if len(str(semillaInicio)) == 4 and semilla >= 100 and semilla <= 9999:
+    if len(str(semillaInicio)) == 4 and semilla >= 100 and semilla <= 9999 and type(semillaInicio) == int and type(numerosAGenerar) == int and numerosAGenerar >= 1:
         numerosAleatorios = []
         Ris = []
         semillas = []
@@ -48,10 +46,10 @@ def centrosCuadrados(semillaInicio, numerosAGenerar):
         escrituraCsv(datos, columnas, carpetaArchivo)
 
     else:
-        print("La semilla otorgada no es un numero enetero de 4 digitos decimales" + "\n")
+        print("La semilla otorgada no es un numero enetero de 4 digitos decimales o la cantidad de numeros a generar es invalida" + "\n")
 
 def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, linealOMixto, chiCuadrada, kolmogorovSmirnov):
-    if modulo > 0 and modulo > multiplicador and multiplicador > 0 and modulo > incremento and (incremento > 0 or incremento == 0) and modulo > semilla and (semilla > 0 or semilla == 0):
+    if modulo > 0 and modulo > multiplicador and multiplicador > 0 and modulo > incremento and (incremento > 0 or incremento == 0) and modulo > semilla and (semilla > 0 or semilla == 0) and numerosAGenerar >= 1 and type(semilla) == int and type(multiplicador) == int and type(incremento) == int and type(modulo) == int and type(numerosAGenerar) == int:
         numerosAleatorios = []
         Ris = []
         semillas = []
@@ -89,7 +87,7 @@ def congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar, li
             kolgomorovSmirnov(Ris)
 
     else:
-        print("El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero")
+        print("El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero; los valores presentados no son validos")
 
 def congruencialMixto(semilla, multiplicador, incremento, modulo, numerosAGenerar, chiCuadrada, kolmogorovSmirnov):
     if hullDobell(multiplicador, incremento, modulo):
@@ -129,7 +127,7 @@ def numeroPrimo(numero):
     return True
 
 def generadorMultiplicativo(semilla, multiplicador, modulo, numerosAGenerar, chiCuadrada, kolmogorovSmirnov):
-    if (semilla == 0 or semilla > 0) and (multiplicador == 0 or multiplicador > 0) and (modulo == 0 or modulo > 0) and modulo > multiplicador and modulo > semilla and float(semilla).is_integer() and float(multiplicador).is_integer() and float(modulo).is_integer():
+    if (semilla == 0 or semilla > 0) and (multiplicador == 0 or multiplicador > 0) and (modulo == 0 or modulo > 0) and modulo > multiplicador and modulo > semilla and float(semilla).is_integer() and float(multiplicador).is_integer() and float(modulo).is_integer() and numerosAGenerar >= 1 and type(numerosAGenerar) == int:
         numerosAleatorios = []
         Ris = []
         semillas = []
@@ -163,7 +161,7 @@ def generadorMultiplicativo(semilla, multiplicador, modulo, numerosAGenerar, chi
         print("Los parametros introducidos por el usuario no cumplen las espeficaciones para este generador")     
 
 def congruencialLinealCombinado(semillasOriginales, multiplicadores, modulos, numerosAGenerar):
-    if(separacionValores(semillasOriginales) != False and separacionValores(multiplicadores) != False and separacionValores(modulos) != False): 
+    if(separacionValores(semillasOriginales) != False and separacionValores(multiplicadores) != False and separacionValores(modulos) != False and numerosAGenerar >= 1 and type(numerosAGenerar) == int): 
         semillas = separacionValores(semillasOriginales)
         multiplicadores = separacionValores(multiplicadores)
         modulos = separacionValores(modulos)
@@ -267,14 +265,16 @@ def validacionChiCuadrada(numeros, porcentajeError):
             frecuenciasEsperadas.append(round(len(numeros) - sum(frecuenciasEsperadas), 3))
         elementosEstadisticoPrueba.append(round(math.pow((frecuenciasAbsolutas[indice] - frecuenciasEsperadas[indice]),2) / frecuenciasEsperadas[indice], 5)) 
     
-    #print(limitesClases)
+    print(k)
+    print(limitesClases)
     print(frecuenciasAbsolutas)
+    print(probabilidades)
     print(frecuenciasEsperadas)
-    #print(elementosEstadisticoPrueba)
+    print(elementosEstadisticoPrueba)
     estadisticoPrueba = round(sum(elementosEstadisticoPrueba), 5)
     print(estadisticoPrueba)
     gradosLibertad = (k - 1) 
-    estadisticoChiCuadrada = round(tablaChiCuadrada[porcentajeError,(gradosLibertad-1)], 5)
+    estadisticoChiCuadrada = round(tablaChiCuadrada[(gradosLibertad-1),porcentajeError], 5)
     print(estadisticoChiCuadrada)
 
 def reasignacionClases(limitesClases, frecuenciasAbsolutas):
@@ -328,7 +328,7 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
 #congruencial(4,5,7,8,8,0)
 #congruencialMixto(4,8121,28411,134456,8)
 #generadorMultiplicativo(15,35,64,25)
-congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399", 20)
+#congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399", 20)
 
 #print(hullDobell(5,7,8))
 #print(hullDobell(75,74,65537))
@@ -336,4 +336,7 @@ congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399
 #print(separacionValores("45678,3939, 20920, 292029282, 212,21292"))
 #creacionCarpeta("Centros_Cuadrados")
 #escrituraCsv([[4,5,6,7], [4,5,6,7],[4,5,6,7], [4,5,6,7]], ["Semilla", "Generador", "Aletorio", "Ri"], "Centros_Cuadrados")
-#validacionChiCuadrada([4,8,1,0.02,3,1,78,76,65,11,12,32,41])
+prueba = [8.223, 0.836, 2.634, 4.778, 0.406, 0.517, 2.33, 2.563, 0.511, 6.426, 2.23, 3.81, 1.624, 1.507, 2.343, 1.458, 0.774, 0.023, 0.225, 3.214, 2.92, 0.968, 0.333, 4.025, 0.538, 0.234, 3.323, 3.334, 2.325, 7.514, 0.761, 4.49, 1.594, 1.064, 5.088, 1.401, 0.294, 3.491, 2.921, 0.334, 1.064, 0.186, 2.782, 3.246, 5.587, 0.685, 1.725, 1.267, 1.702, 1.849]
+for indice in range(0, len(prueba)):
+    prueba[indice] = prueba[indice] / 10
+#validacionChiCuadrada(prueba, 9)
