@@ -337,26 +337,26 @@ def kolgomorovSmirnov(numeros,nivelSignificancia):
 
     datos = numpy.array(tabla)
 
-    dataframe = pd.DataFrame(datos,index = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,20,25,30,40], columns = [0.2,0.1,0.05,0.02,0.01])
+    dataframe = pd.DataFrame(datos,index = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,20,25,30,40], columns = [0.2,0.1,0.05,0.02,0.01]) # Los columns son los porcentajes para KolgomorovSmirnov (20%, 10%, 5%, 2%, 1%)
 
     if(nivelSignificancia == 0.2 or nivelSignificancia == 0.1 or nivelSignificancia == 0.05 or nivelSignificancia == 0.02 or nivelSignificancia == 0.01):
       if(N<41):
-        valorCritico = dato[nivelSignificancia][N]
+        valorCritico = dataframe[nivelSignificancia][N]
         print("Ev valor critico es:", valorCritico)
       elif(nivelSignificancia == 0.2):
-        valorCritico = 1.07 / Math.sqrt(N)
+        valorCritico = 1.07 / math.sqrt(N)
         print("Ev valor critico es:", valorCritico)
       elif(nivelSignificancia == 0.1):
-        valorCritico = 1.22 / Math.sqrt(N)
+        valorCritico = 1.22 / math.sqrt(N)
         print("Ev valor critico es:", valorCritico)
       elif(nivelSignificancia == 0.05):
-        valorCritico = 1.36 / Math.sqrt(N) 
+        valorCritico = 1.36 / math.sqrt(N) 
         print("Ev valor critico es:", valorCritico)
       elif(nivelSignificancia == 0.02):
-        valorCritico = 1.52 / Math.sqrt(N) 
+        valorCritico = 1.52 / math.sqrt(N) 
         print("Ev valor critico es:", valorCritico)
       elif(nivelSignificancia == 0.01):
-        valorCritico = 1.63 / Math.sqrt(N)
+        valorCritico = 1.63 / math.sqrt(N)
         print("Ev valor critico es:", valorCritico) 
       else:
         print("No se puede realizar la operacion")  
@@ -419,10 +419,10 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
 #print(separacionValores("45678,3939, 20920, 292029282, 212,21292"))
 #creacionCarpeta("Centros_Cuadrados")
 #escrituraCsv([[4,5,6,7], [4,5,6,7],[4,5,6,7], [4,5,6,7]], ["Semilla", "Generador", "Aletorio", "Ri"], "Centros_Cuadrados")
-prueba = [8.223, 0.836, 2.634, 4.778, 0.406, 0.517, 2.33, 2.563, 0.511, 6.426, 2.23, 3.81, 1.624, 1.507, 2.343, 1.458, 0.774, 0.023, 0.225, 3.214, 2.92, 0.968, 0.333, 4.025, 0.538, 0.234, 3.323, 3.334, 2.325, 7.514, 0.761, 4.49, 1.594, 1.064, 5.088, 1.401, 0.294, 3.491, 2.921, 0.334, 1.064, 0.186, 2.782, 3.246, 5.587, 0.685, 1.725, 1.267, 1.702, 1.849]
-for indice in range(0, len(prueba)):
-    prueba[indice] = prueba[indice] / 10
+#prueba = [8.223, 0.836, 2.634, 4.778, 0.406, 0.517, 2.33, 2.563, 0.511, 6.426, 2.23, 3.81, 1.624, 1.507, 2.343, 1.458, 0.774, 0.023, 0.225, 3.214, 2.92, 0.968, 0.333, 4.025, 0.538, 0.234, 3.323, 3.334, 2.325, 7.514, 0.761, 4.49, 1.594, 1.064, 5.088, 1.401, 0.294, 3.491, 2.921, 0.334, 1.064, 0.186, 2.782, 3.246, 5.587, 0.685, 1.725, 1.267, 1.702, 1.849]
+#for indice in range(0, len(prueba)):
+    #prueba[indice] = prueba[indice] / 10
 #validacionChiCuadrada(prueba, 9)
-#numeros = [0.44,0.81,0.14,0.05,0.93]
-#nivelSignificancia = 0.05
-#kolgomorovSmirnov(numeros, nivelSignificancia)
+numeros = [0.44,0.81,0.14,0.05,0.93]
+nivelSignificancia = 0.05
+kolgomorovSmirnov(numeros, nivelSignificancia)
