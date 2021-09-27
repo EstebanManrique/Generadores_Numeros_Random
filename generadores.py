@@ -5,6 +5,7 @@ import pandas as pd
 import time
 import math
 import decimal
+import matplotlib.pyplot as plt
 from scipy.stats import chi2
 
 errorPercentages = numpy.array([0.995, 0.99, 0.975, 0.95, 0.90, 0.75, 0.5, 0.25, 0.10, 0.05, 0.025, 0.01, 0.005]) #99.5%, 99%, 97.5%, 95%, 90%, 75%, 50%, 25%, 10%, 5%, 2.5%, 1%, 0.5% 
@@ -291,7 +292,7 @@ def reasignacionClases(limitesClases, frecuenciasAbsolutas):
             break
     return [limitesClases, frecuenciasAbsolutas]    
 
-def kolgomorovSmirnov(numeros,nivelSignificancia):
+def kolgomorovSmirnov(numeros, nivelSignificancia):
     numeros.sort()
     Ri = numeros 
     N = len(numeros)
@@ -302,67 +303,104 @@ def kolgomorovSmirnov(numeros,nivelSignificancia):
 
     for i in range(1, N + 1): #Calcular i / N
         i_n.append(i/N) 
-    
-    
+        
     for i in range(0, N): #Calcular i / N - Ri
         i_n1.append(abs(i_n[i] - Ri[i] ))
     
     ar = [Ri[0]]
     for i in range (1, N): #Calcular Ri - ((i-1)/N)
-        ar.append(Ri[i] - i_n[i-1])
+        ar.append(abs(Ri[i] - i_n[i-1]))
 
     Dplus = max(i_n1)
     Dminus = max(ar)
     Dtotal = max(Dplus, Dminus)
 
-    #Link de la tabla https://simulacionutp2016.wordpress.com/2016/10/01/prueba-kolmogorov-smirnov/
-    tabla = [[.9,.1,.975,.99,.995],
-            [.684,.776,.842,.9,.929],
-            [.565,.636,.708,.689,.829],
-            [.493,.565,.624,.689,.829],
-            [.477,.509,.563,.627,.669],
-            [.41,.468,.619,.577,.617],
-            [.381,.436,.483,.538,.576],
-            [.359,.41,.454,.507,.542],
-            [.339,.387,.43,.48,.513],
-            [1.323,.369,.409,.457,.486],
-            [1.308,.352,.391,.437,.468],
-            [1.295,.338,.375,.419,.449],
-            [1.285,.325,.361,.404,.432],
-            [1.275,.314,.349,.39,.418],
-            [1.266,.304,.338,.377,.404],
-            [2.232,.265,.294,.329,.352],
-            [2.208,.238,.264,.295,.317],
-            [3.19,.218,.242,.27,.29],
-            [4.165,.189,.21,.235,.252]]
-
+    tabla = [[0.9,0.95,0.975,0.99,0.995,0.9975,0.999,0.995],
+    [0.68337,0.77639,0.84189,0.9,0.92929,0.95,0.96838,0.97764],
+    [0.56481,0.6304,0.70760,0.78456,0.829,0.86428,0.9,0.92065],
+    [0.49265,0.56522,0.62394,0.68887,0.73424,0.77639,0.82217,0.85047],
+    [0.44698,0.50945,0.56328,0.62718,0.66853,0.70543,0.75,0.78137],
+    [0.41037,0.46799,0.51926,0.57741,0.61661,0.65287,0.69571,0.72479],
+    [0.38148,0.43607,0.48342,0.53844,0.57581,0.60975,0.65071,0.67930],
+    [0.35831,0.40962,0.45427,0.50654,0.54179,0.57429,0.61368,0.64098],
+    [0.33910,0.38746,0.43001,0.47960,0.51332,0.54443,0.58210,0.60846],
+    [0.32260,0.36866,0.40925,0.45562,0.48893,0.51872,0.555,0.58042],
+    [0.30829,0.35242,0.39122,0.43670,0.46770,0.49539,0.53135,0.55588],
+    [0.29577,0.33815,0.37543,0.41918,0.44905,0.47672,0.51047,0.53422],
+    [0.28470,0.32549,0.36143,0.40362,0.43247,0.45921,0.49189,0.51490],
+    [0.27481,0.31417,0.34890,0.38970,0.41762,0.44352,0.4725,0.49753],
+    [0.26589,0.30397,0.33750,0.37713,0.40420,0.42934,0.45611,0.48182],
+    [0.25778,0.29472,0.32733,0.36571,0.39201,0.41644,0.44637,0.4675],
+    [0.25039,0.28627,0.31796,0.35528,0.38086,0.40464,0.43380,0.45540],
+    [0.2436,0.27851,0.30936,0.34569,0.37062,0.39380,0.42224,0.44234],
+    [0.23735,0.27136,0.30143,0.33685,0.36117,0.38379,0.41156,0.43119],
+    [0.23156,0.26473,0.29408,0.32866,0.35241,0.37451,0.40165,0.42085],
+    [0.22517,0.25858,0.28724,0.32104,0.34426,0.36588,0.39243,0.41122],
+    [0.221,0.25283,0.28087,0.31394,0.33666,0.35782,0.38382,0.40223],
+    [0.21646,0.24746,0.2749,0.30728,0.32954,0.35027,0.37575,0.39380],
+    [0.21205,0.24242,0.26931,0.30104,0.32286,0.34318,0.36787,0.38588],
+    [0.20790,0.23768,0.26404,0.29518,0.31657,0.33651,0.36104,0.37743],
+    [0.20399,0.23320,0.25908,0.28962,0.30963,0.33022,0.35431,0.37139],
+    [0.20030,0.22898,0.25438,0.28438,0.30502,0.32425,0.34794,0.36473],
+    [0.19680,0.22497,0.24993,0.27942,0.29971,0.31862,0.34190,0.35842],
+    [0.19348,0.22117,0.24571,0.27471,0.29466,0.31327,0.33617,0.35242],
+    [0.19032,0.21756,0.2417,0.27023,0.28986,0.30818,0.33072,0.34672],
+    [0.18732,0.21412,0.23788,0.26596,0.28529,0.30333,0.32553,0.34129],
+    [0.18445,0.21085,0.23424,0.26189,0.28094,0.29870,0.32058,0.33611],
+    [0.18171,0.20771,0.23076,0.25801,0.27577,0.29428,0.31584,0.33115],
+    [0.17909,0.21472,0.22743,0.25429,0.27271,0.29005,0.31131,0.32641],
+    [0.17659,0.20158,0.22425,0.25073,0.26897,0.286,0.30597,0.32187],
+    [0.17418,0.1991,0.22119,0.24732,0.26532,0.28211,0.30281,0.31751],
+    [0.17188,0.19646,0.21826,0.24404,0.2618,0.27838,0.29882,0.31333],
+    [0.16966,0.19392,0.21544,0.24089,0.25843,0.27483,0.29498,0.30931],
+    [0.16753,0.19148,0.21273,0.23785,0.25518,0.27135,0.29125,0.30544],
+    [0.16547,0.18913,0.21012,0.23494,0.25205,0.26803,0.28772,0.30171]]
+            
     datos = numpy.array(tabla)
 
-    dataframe = pd.DataFrame(datos,index = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,20,25,30,40], columns = [0.2,0.1,0.05,0.02,0.01]) # Los columns son los porcentajes para KolgomorovSmirnov (20%, 10%, 5%, 2%, 1%)
+    dataframe = pd.DataFrame(datos,index = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+                                            22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40], columns = [0.20,0.10,0.05,0.02,0.01,0.005,0.002,0.001]) # Los columns son los porcentajes para KolgomorovSmirnov (20%, 10%, 5%, 2%, 1%)
 
-    if(nivelSignificancia == 0.2 or nivelSignificancia == 0.1 or nivelSignificancia == 0.05 or nivelSignificancia == 0.02 or nivelSignificancia == 0.01):
+    if(nivelSignificancia >= 0.20 or nivelSignificancia <= 0.001):
       if(N<41):
         valorCritico = dataframe[nivelSignificancia][N]
-        print("Ev valor critico es:", valorCritico)
-      elif(nivelSignificancia == 0.2):
+        print("El valor critico es:", valorCritico)
+
+      elif(nivelSignificancia >= 0.2 or nivelSignificancia < 0.1):
         valorCritico = 1.07 / math.sqrt(N)
-        print("Ev valor critico es:", valorCritico)
-      elif(nivelSignificancia == 0.1):
+        print("El valor critico es:", valorCritico)
+      elif(nivelSignificancia >= 0.10 or nivelSignificancia < 0.05):
         valorCritico = 1.22 / math.sqrt(N)
-        print("Ev valor critico es:", valorCritico)
-      elif(nivelSignificancia == 0.05):
-        valorCritico = 1.36 / math.sqrt(N) 
-        print("Ev valor critico es:", valorCritico)
-      elif(nivelSignificancia == 0.02):
-        valorCritico = 1.52 / math.sqrt(N) 
-        print("Ev valor critico es:", valorCritico)
-      elif(nivelSignificancia == 0.01):
+        print("El valor critico es:", valorCritico)
+      elif(nivelSignificancia >= 0.05 or nivelSignificancia < 0.02):
+        valorCritico = 1.36 / math.sqrt(N)
+        print("El valor critico es:", valorCritico)
+      elif(nivelSignificancia >= 0.02 or nivelSignificancia < 0.01):
+        valorCritico = 1.52 / math.sqrt(N)
+        print("El valor critico es:", valorCritico)
+      elif(nivelSignificancia >= 0.01 or nivelSignificancia < 0.005):
         valorCritico = 1.63 / math.sqrt(N)
-        print("Ev valor critico es:", valorCritico) 
+        print("El valor critico es:", valorCritico)
+      elif(nivelSignificancia >= 0.005 or nivelSignificancia < 0.002):
+        valorCritico = 1.73 / math.sqrt(N)
+        print("El valor critico es:", valorCritico)
+      elif(nivelSignificancia >= 0.002 or nivelSignificancia < 0.001):
+        valorCritico = 1.85 / math.sqrt(N)
+        print("El valor critico es:", valorCritico)
+      elif(nivelSignificancia >= 0.002 or nivelSignificancia < 0.001):
+        valorCritico = 1.85 / math.sqrt(N)
+        print("El valor critico es:", valorCritico)
+      elif(nivelSignificancia == 0.001):
+        valorCritico = 1.95 / math.sqrt(N)
+        print("El valor critico es:", valorCritico)
       else:
         print("No se puede realizar la operacion")  
+
     else:
       print("Nivel de Significancia Inválido")
+
+    #print(i_n)
+    graficar(Ri,i_n)
 
     ##Para el Quiroz 
     #Tabla de la ppt del prof
@@ -374,7 +412,19 @@ def kolgomorovSmirnov(numeros,nivelSignificancia):
     print("D+ ",Dplus)
     print("D- ",Dminus)
     print("Dtotal ",Dtotal)
-    print(dataframe)
+    print(dataframe) 
+
+def graficar(Ri,i_n):
+  #https://matplotlib.org/stable/tutorials/introductory/pyplot.html#sphx-glr-tutorials-introductory-pyplot-py
+  print(Ri)
+  print(i_n)
+  plt.plot(Ri,i_n)
+  plt.plot(Ri,Ri)
+  Ri.insert(0,0)
+  #plt.plot(Ri,Ri)
+  plt.ylabel('acumulada')
+  plt.xlabel('randoms')
+  plt.show()
 
 def creacionCarpeta(nombreCarpeta):
     pathActual = os.getcwd()
