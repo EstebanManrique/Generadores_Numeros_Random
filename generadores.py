@@ -365,14 +365,14 @@ def kolgomorovSmirnov(numeros,nivelSignificancia):
 
     ##Para el Quiroz 
     #Tabla de la ppt del prof
-    print(N) 
-    print(Ri)
-    print(i_n) #Calcular i / N
-    print(i_n1) #Calcular i / N - Ri
-    print(ar) #Calcular Ri - ((i-1)/N)
-    print(Dplus)
-    print(Dminus)
-    print(Dtotal)
+    print("Numero de randoms", N) 
+    print("Numeros ordenados",Ri)
+    print("1er calculo",i_n) #Calcular i / N
+    print("2ndo calculo",i_n1) #Calcular i / N - Ri
+    print("3er calculo",ar) #Calcular Ri - ((i-1)/N)
+    print("D+ ",Dplus)
+    print("D- ",Dminus)
+    print("Dtotal ",Dtotal)
     print(dataframe)
 
 def creacionCarpeta(nombreCarpeta):
