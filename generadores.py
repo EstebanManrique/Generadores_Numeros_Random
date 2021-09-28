@@ -7,6 +7,7 @@ import math
 import decimal
 from scipy.stats import chi2
 import matplotlib.pyplot as plt
+from numpy import random
 
 errorPercentages = numpy.array([0.995, 0.99, 0.975, 0.95, 0.90, 0.75, 0.5, 0.25, 0.10, 0.05, 0.025, 0.01, 0.005]) #99.5%, 99%, 97.5%, 95%, 90%, 75%, 50%, 25%, 10%, 5%, 2.5%, 1%, 0.5% 
 tablaChiCuadrada = numpy.array(range(1,100)).reshape(-1,1)
@@ -301,7 +302,7 @@ def reasignacionClases(limitesClases, frecuenciasAbsolutas):
             break
     return [limitesClases, frecuenciasAbsolutas]    
 
-def kolgomorovSmirnov(numeros, nivelSignificancia):
+def kolgomorovSmirnov(numeros,nivelSignificancia):
     numeros.sort()
     Ri = numeros 
     N = len(numeros)
@@ -324,6 +325,7 @@ def kolgomorovSmirnov(numeros, nivelSignificancia):
     Dminus = max(ar)
     Dtotal = max(Dplus, Dminus)
 
+    #Link de la tabla https://simulacionutp2016.wordpress.com/2016/10/01/prueba-kolmogorov-smirnov/
     tabla = [[0.9,0.95,0.975,0.99,0.995,0.9975,0.999,0.995],
     [0.68337,0.77639,0.84189,0.9,0.92929,0.95,0.96838,0.97764],
     [0.56481,0.6304,0.70760,0.78456,0.829,0.86428,0.9,0.92065],
@@ -370,7 +372,7 @@ def kolgomorovSmirnov(numeros, nivelSignificancia):
     dataframe = pd.DataFrame(datos,index = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
                                             22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40], columns = [0.20,0.10,0.05,0.02,0.01,0.005,0.002,0.001]) # Los columns son los porcentajes para KolgomorovSmirnov (20%, 10%, 5%, 2%, 1%)
 
-    if(nivelSignificancia >= 0.20 or nivelSignificancia <= 0.001):
+    if(nivelSignificancia >= 0.001 and nivelSignificancia <= 0.20):
       if(N<41):
         valorCritico = dataframe[nivelSignificancia][N]
         print("El valor critico es:", valorCritico)
@@ -408,12 +410,11 @@ def kolgomorovSmirnov(numeros, nivelSignificancia):
     else:
       print("Nivel de Significancia Inválido")
 
-    #print(i_n)
-    graficar(Ri,i_n)
+    graficarSmirnov(Ri,i_n)
 
     ##Para el Quiroz 
     #Tabla de la ppt del prof
-    print("Numero de randoms", N) 
+    ''' print("Numero de randoms", N) 
     print("Numeros ordenados",Ri)
     print("1er calculo",i_n) #Calcular i / N
     print("2ndo calculo",i_n1) #Calcular i / N - Ri
@@ -421,16 +422,15 @@ def kolgomorovSmirnov(numeros, nivelSignificancia):
     print("D+ ",Dplus)
     print("D- ",Dminus)
     print("Dtotal ",Dtotal)
-    print(dataframe) 
+    print(dataframe)  '''
 
-def graficar(Ri,i_n):
-  #https://matplotlib.org/stable/tutorials/introductory/pyplot.html#sphx-glr-tutorials-introductory-pyplot-py
-  #Ri.append(1)
+def graficarSmirnov(Ri,i_n):
   print(Ri)
   print(i_n)
   horizontales = []
   verticales = []
   verticales.append(0)
+
   for i__n in range(len(i_n)):
       for i in range(0,2):
         verticales.append(i_n[i__n])
@@ -438,18 +438,17 @@ def graficar(Ri,i_n):
       for i in range(0,2):
         horizontales.append(Ri[i__n])
   horizontales.append(1)
-  arx = [.05,.05,.14,.14,.44,.44,.81,.81,.93,.93,1]
-  ary = [0,.2,.2,.4,.4,.6,.6,.8,.8,1,1]
-  #plt.plot(Ri,i_n)
   plt.plot(horizontales,verticales)
-  #plt.plot(Ri,i_n)
+
   Ri.insert(0,0)
   Ri.append(1)
+  print(Ri)
   plt.plot(Ri,Ri)
-  Ri.insert(0,0)
-  #plt.plot(Ri,Ri)
-  plt.ylabel('acumulada')
-  plt.xlabel('randoms')
+
+  plt.legend(['Sn(x)','F(x)'])
+  plt.ylabel('Probabilidad Acumulada')
+  plt.xlabel('R(i)')
+  plt.title("Comparacion de F(x) y Sn(x)")
   plt.show()
 
 def creacionCarpeta(nombreCarpeta):
@@ -503,4 +502,6 @@ numeros = [.018,.037,.156,.191,.213,.233,.281,.383,.392,.408,0.411, 0.434, 0.469
 #validacionChiCuadrada(numeros, 9)
 #numeros = [0.44,0.81,0.14,0.05,0.93]
 nivelSignificancia = 0.05
-kolgomorovSmirnov(numeros, nivelSignificancia)
+numero = random.rand(100000)
+numero= numero.tolist()
+kolgomorovSmirnov(numero, nivelSignificancia)
