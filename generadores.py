@@ -5,8 +5,8 @@ import pandas as pd
 import time
 import math
 import decimal
-import matplotlib.pyplot as plt
 from scipy.stats import chi2
+import matplotlib.pyplot as plt
 
 errorPercentages = numpy.array([0.995, 0.99, 0.975, 0.95, 0.90, 0.75, 0.5, 0.25, 0.10, 0.05, 0.025, 0.01, 0.005]) #99.5%, 99%, 97.5%, 95%, 90%, 75%, 50%, 25%, 10%, 5%, 2.5%, 1%, 0.5% 
 tablaChiCuadrada = numpy.array(range(1,100)).reshape(-1,1)
@@ -280,6 +280,15 @@ def validacionChiCuadrada(numeros, porcentajeError):
     estadisticoChiCuadrada = round(tablaChiCuadrada[(gradosLibertad-1),porcentajeError], 5)
     print(estadisticoChiCuadrada)
 
+    etiquetasGrafica = limitesClases
+    ubicacionesBarras = numpy.arange(len(frecuenciasAbsolutas))
+    ancho = 0.35
+    figura, aux = plt.subplots()
+    encontradas = aux.bar(ubicacionesBarras - ancho / 2, frecuenciasAbsolutas, ancho, label="Encontradas")
+    esperadas = aux.bar(ubicacionesBarras + ancho / 2, frecuenciasEsperadas, ancho, label="Esperadas")
+    aux.set_ylabel("Numeros")
+    aux.set_title("Frecuencias Esperadas")
+
 def reasignacionClases(limitesClases, frecuenciasAbsolutas):
     for indice in range(0, len(frecuenciasAbsolutas)):
         if frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
@@ -416,9 +425,26 @@ def kolgomorovSmirnov(numeros, nivelSignificancia):
 
 def graficar(Ri,i_n):
   #https://matplotlib.org/stable/tutorials/introductory/pyplot.html#sphx-glr-tutorials-introductory-pyplot-py
+  #Ri.append(1)
   print(Ri)
   print(i_n)
-  plt.plot(Ri,i_n)
+  horizontales = []
+  verticales = []
+  verticales.append(0)
+  for i__n in range(len(i_n)):
+      for i in range(0,2):
+        verticales.append(i_n[i__n])
+  for i__n in range(len(Ri)):
+      for i in range(0,2):
+        horizontales.append(Ri[i__n])
+  horizontales.append(1)
+  arx = [.05,.05,.14,.14,.44,.44,.81,.81,.93,.93,1]
+  ary = [0,.2,.2,.4,.4,.6,.6,.8,.8,1,1]
+  #plt.plot(Ri,i_n)
+  plt.plot(horizontales,verticales)
+  #plt.plot(Ri,i_n)
+  Ri.insert(0,0)
+  Ri.append(1)
   plt.plot(Ri,Ri)
   Ri.insert(0,0)
   #plt.plot(Ri,Ri)
@@ -473,8 +499,8 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
 #prueba = [8.223, 0.836, 2.634, 4.778, 0.406, 0.517, 2.33, 2.563, 0.511, 6.426, 2.23, 3.81, 1.624, 1.507, 2.343, 1.458, 0.774, 0.023, 0.225, 3.214, 2.92, 0.968, 0.333, 4.025, 0.538, 0.234, 3.323, 3.334, 2.325, 7.514, 0.761, 4.49, 1.594, 1.064, 5.088, 1.401, 0.294, 3.491, 2.921, 0.334, 1.064, 0.186, 2.782, 3.246, 5.587, 0.685, 1.725, 1.267, 1.702, 1.849]
 #for indice in range(0, len(prueba)):
     #prueba[indice] = prueba[indice] / 10
-#numeros = [.018,.037,.156,.191,.213,.233,.281,.383,.392,.408,0.411, 0.434, 0.469, 0.541, 0.553, 0.575, 0.598, 0.668, 0.671, 0.711,0.719, 0.73, 0.77, 0.791, 0.819, 0.826, 0.894, 0.914, 0.994, 0.995]
-#validacionChiCuadrada(prueba, 9)
+numeros = [.018,.037,.156,.191,.213,.233,.281,.383,.392,.408,0.411, 0.434, 0.469, 0.541, 0.553, 0.575, 0.598, 0.668, 0.671, 0.711,0.719, 0.73, 0.77, 0.791, 0.819, 0.826, 0.894, 0.914, 0.994, 0.995]
+#validacionChiCuadrada(numeros, 9)
 #numeros = [0.44,0.81,0.14,0.05,0.93]
-#nivelSignificancia = 0.05
-#kolgomorovSmirnov(numeros, nivelSignificancia)
+nivelSignificancia = 0.05
+kolgomorovSmirnov(numeros, nivelSignificancia)
