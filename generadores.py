@@ -286,8 +286,16 @@ def validacionChiCuadrada(numeros, porcentajeError):
     figura, aux = plt.subplots()
     encontradas = aux.bar(ubicacionesBarras - ancho / 2, frecuenciasAbsolutas, ancho, label="Encontradas")
     esperadas = aux.bar(ubicacionesBarras + ancho / 2, frecuenciasEsperadas, ancho, label="Esperadas")
+    aux.set_xlabel("Rangos de las clases")
     aux.set_ylabel("Numeros")
-    aux.set_title("Frecuencias Esperadas")
+    aux.set_title("Frecuencias Encontradas VS Esperadas")
+    aux.set_xticks(ubicacionesBarras)
+    aux.set_xticklabels(etiquetasGrafica)
+    aux.legend()
+    aux.bar_label(encontradas, padding=2)
+    aux.bar_label(esperadas, padding=2)
+    figura.tight_layout()
+    plt.show()
 
 def reasignacionClases(limitesClases, frecuenciasAbsolutas):
     for indice in range(0, len(frecuenciasAbsolutas)):
@@ -499,8 +507,8 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
 #prueba = [8.223, 0.836, 2.634, 4.778, 0.406, 0.517, 2.33, 2.563, 0.511, 6.426, 2.23, 3.81, 1.624, 1.507, 2.343, 1.458, 0.774, 0.023, 0.225, 3.214, 2.92, 0.968, 0.333, 4.025, 0.538, 0.234, 3.323, 3.334, 2.325, 7.514, 0.761, 4.49, 1.594, 1.064, 5.088, 1.401, 0.294, 3.491, 2.921, 0.334, 1.064, 0.186, 2.782, 3.246, 5.587, 0.685, 1.725, 1.267, 1.702, 1.849]
 #for indice in range(0, len(prueba)):
     #prueba[indice] = prueba[indice] / 10
-numeros = [.018,.037,.156,.191,.213,.233,.281,.383,.392,.408,0.411, 0.434, 0.469, 0.541, 0.553, 0.575, 0.598, 0.668, 0.671, 0.711,0.719, 0.73, 0.77, 0.791, 0.819, 0.826, 0.894, 0.914, 0.994, 0.995]
+#numeros = [.018,.037,.156,.191,.213,.233,.281,.383,.392,.408,0.411, 0.434, 0.469, 0.541, 0.553, 0.575, 0.598, 0.668, 0.671, 0.711,0.719, 0.73, 0.77, 0.791, 0.819, 0.826, 0.894, 0.914, 0.994, 0.995]
 #validacionChiCuadrada(numeros, 9)
 #numeros = [0.44,0.81,0.14,0.05,0.93]
-nivelSignificancia = 0.05
-kolgomorovSmirnov(numeros, nivelSignificancia)
+#nivelSignificancia = 0.05
+#kolgomorovSmirnov(numeros, nivelSignificancia)
