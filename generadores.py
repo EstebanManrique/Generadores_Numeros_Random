@@ -16,7 +16,7 @@ indiceErrores = 2
 
 def centrosCuadrados(semillaInicio, numerosAGenerar):
     semilla = int(semillaInicio)
-    if len(str(semillaInicio)) == 4 and semilla >= 100 and semilla <= 9999 and type(semillaInicio) == int and type(numerosAGenerar) == int and numerosAGenerar >= 1:
+    if len(str(semillaInicio)) == 4 and semilla >= 100 and semilla <= 9999 and type(numerosAGenerar) == int and numerosAGenerar >= 1:
         numerosAleatorios = []
         Ris = []
         semillas = []
@@ -380,7 +380,7 @@ def kolgomorovSmirnov(numeros,nivelSignificancia):
     dataframe = pd.DataFrame(datos,index = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
                                             22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40], columns = [0.20,0.10,0.05,0.02,0.01,0.005,0.002,0.001]) # Los columns son los porcentajes para KolgomorovSmirnov (20%, 10%, 5%, 2%, 1%)
 
-    if(nivelSignificancia >= 0.001 and nivelSignificancia <= 0.20):
+    if(nivelSignificancia >= 0.001 and nivelSignificancia <= 0.20 ):
       if(N<41):
         valorCritico = dataframe[nivelSignificancia][N]
         print("El valor critico es:", valorCritico)
@@ -491,7 +491,7 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
             escritor.writerows(renglon)
 
 
-#centrosCuadrados("9575", 200)
+centrosCuadrados("3547", 200)
 #congruencial(4,5,7,8,8,0)
 #congruencialMixto(4,8121,28411,134456,8)
 #generadorMultiplicativo(15,35,64,25)
@@ -509,7 +509,9 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
 #numeros = [.018,.037,.156,.191,.213,.233,.281,.383,.392,.408,0.411, 0.434, 0.469, 0.541, 0.553, 0.575, 0.598, 0.668, 0.671, 0.711,0.719, 0.73, 0.77, 0.791, 0.819, 0.826, 0.894, 0.914, 0.994, 0.995]
 #validacionChiCuadrada(numeros, 9)
 #numeros = [0.44,0.81,0.14,0.05,0.93]
-nivelSignificancia = 0.05
-numero = random.rand(1000000)
-numero= numero.tolist()
-kolgomorovSmirnov(numero, nivelSignificancia)
+#nivelSignificancia = 0.05
+#numero = random.rand(1000000)
+#numero= numero.tolist()
+#kolgomorovSmirnov(numero, nivelSignificancia)
+#numeroPrimo((2**31 - 1))
+#congruencialMixto(123457, 7**5, 0, (2**31 - 1), 10, 0, 0)
