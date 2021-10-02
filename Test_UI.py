@@ -5,12 +5,20 @@ from tkinter import font as tkFont
 import os
 import csv
 import numpy
+import pandas as pd
 import time
 import math
 import decimal
-
+from scipy.stats import chi2
+import matplotlib
+matplotlib.use("TkAgg")
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg,NavigationToolbar2Tk
+from matplotlib.figure import Figure
+import matplotlib.pyplot as plt
+from numpy import random
 
 class App(tk.Tk):
+    
     def __init__(self):
         super().__init__()
         self.geometry("1000x450")
@@ -26,6 +34,9 @@ class App(tk.Tk):
         self.porcentajes=(
             "99.5%", "99%", "97.5%", "95%", "90%", "75%", "50%", "25%", "10%", "5%", "2.5%", "1%", "0.5%"
             )
+        self.porcentajes2=(
+            "20%", "10%", "5%", "2%", "1%", "0.5%", "0.2%", "0.1%"
+            )
 
         # set up variable
         self.option = tk.StringVar(self)
@@ -33,8 +44,16 @@ class App(tk.Tk):
         self.option.set(self.menu[0])
         
         self.option2 = tk.StringVar(self)
+        self.option3 = tk.StringVar(self)
+        
+        self.errorPercentages = numpy.array([0.995, 0.99, 0.975, 0.95, 0.90, 0.75, 0.5, 0.25, 0.10, 0.05, 0.025, 0.01, 0.005])
+        self.significancia = numpy.array([0.20,0.10,0.05,0.02,0.01,0.005,0.002,0.001])
         
         self.option2.set(self.porcentajes[0])
+        self.option3.set(self.porcentajes2[0])
+        
+        self.tablaChiCuadrada = numpy.array(range(1,100)).reshape(-1,1)
+        self.tablaChiCuadrada = chi2.isf(self.errorPercentages, self.tablaChiCuadrada)
         
         self.chi=tk.IntVar()
         self.kov=tk.IntVar()
@@ -50,8 +69,8 @@ class App(tk.Tk):
         label = ttk.Label(self,  text='SIMULADOR DE NUMEROS RANDOM',font = ("Castellar",15))
         label.grid(column=0, row=0, sticky=tk.W, **paddings)
 
-        self.frame = tk.LabelFrame(self,text="Método de los Centros Cuadrados", borderwidth=8, padx=175, pady=50, labelanchor = "nw", font = ("Castellar",12))
-        self.frame.place(x=10, y=70)
+        self.frame = tk.LabelFrame(self,text="Método de los Centros Cuadrados", borderwidth=8,  labelanchor = "nw", font = ("Castellar",12))
+        self.frame.grid(column=0, row=1,pady=20,padx=10)
 
         # option menu
         option_menu = tk.OptionMenu(
@@ -96,7 +115,6 @@ class App(tk.Tk):
                 renglon = numpy.array([renglon])
                 escritor.writerows(renglon)
 
-
     def reasignacionClases(self,limitesClases, frecuenciasAbsolutas):
             for indice in range(0, len(frecuenciasAbsolutas)):
                 if frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
@@ -109,39 +127,32 @@ class App(tk.Tk):
                     break
             return [limitesClases, frecuenciasAbsolutas]    
     
-    def chi_frame(self,menor,mayor,claseLongitud,clases,fo,fe,prob,grados,aprob,formula,clasesSinAjuste,feSinAjuste):
+    def chi_frame(self,menor,mayor,claseLongitud,clases,fo,fe,prob,grados,aprob,formula,fig,com):
         
         chiFrame = tk.Toplevel()
         chiFrame.title("Chi-Cuadrada")
         
-        label = tk.Label(chiFrame, text="Rango: ", font=("Arial",17),padx=15, pady=15)
+        label = tk.Label(chiFrame, text="Rango:", font=("Arial",17,'bold'))
         label.grid(row=0,column=0)
-        labelRango = tk.Label(chiFrame, text=(menor+" - "+mayor), font=("Arial",15),padx=15, pady=15)
+        labelRango = tk.Label(chiFrame, text=(menor+" - "+mayor), font=("Arial",14))
         labelRango.grid(row=0,column=1)
         
-        label2 = tk.Label(chiFrame, text="Clase (Longuitud): ", font=("Arial",17),padx=15, pady=15)
-        label2.grid(row=2,column=0)
-        labelClase = tk.Label(chiFrame, text=str(claseLongitud), font=("Arial",15),padx=15, pady=15)
-        labelClase.grid(row=2,column=1)
+        label2 = tk.Label(chiFrame, text="Clase (Longuitud): ", font=("Arial",17,'bold'))
+        label2.grid(row=0,column=2)
+        labelClase = tk.Label(chiFrame, text=str(claseLongitud), font=("Arial",14))
+        labelClase.grid(row=0,column=3)
         
-        label3 = tk.Label(chiFrame, text="K: ", font=("Arial",17),padx=15, pady=15)
-        label3.grid(row=1,column=0)
-        labelK = tk.Label(chiFrame, text=str(len(clases)), font=("Arial",15),padx=15, pady=15)
-        labelK.grid(row=1,column=1)
-        
-        labelBlank = tk.Label(chiFrame, text="  ", font=("Arial",17),padx=15, pady=15)
-        labelBlank.grid(row=3,column=0)
-        
-        labelTable = tk.Label(chiFrame, text="Clases Sin Ajustar", font=("Arial",17),padx=15, pady=15)
-        labelTable.place(x=200,y=180)
+        label3 = tk.Label(chiFrame, text="K: ", font=("Arial",17,'bold'))
+        label3.grid(row=0,column=4)
+        labelK = tk.Label(chiFrame, text=str(len(clases)), font=("Arial",14))
+        labelK.grid(row=0,column=5)
+
         
         cols = ('K','Clase', 'FOi observado', 'Probabilidad', 'FEi esperado', '(FO - FE)^2/FE')
-        cols2 = ('K','Clase','FOi observado')
         #, '(FO - FE)^2/FE'
         
-        clasesStr=[]
-        clasesStr2=[]
-        
+        clasesStr=[] 
+
         if(aprob==1):
             color="green"
         else:
@@ -152,57 +163,78 @@ class App(tk.Tk):
             aux=str(clases[x][0])+" - " + str(clases[x][1]) 
             clasesStr.append(aux)
             
-        for x in range(len(clasesSinAjuste)):
-            aux=""
-            aux=str(clasesSinAjuste[x][0])+" - " + str(clasesSinAjuste[x][1]) 
-            clasesStr2.append(aux)
 
         table = ttk.Treeview(chiFrame, columns=cols, show='headings',selectmode='browse')
-        
-        table2 = ttk.Treeview(chiFrame, columns=cols2, show='headings',selectmode='browse')
+
        
         for col in cols:
             table.heading(col, text=col,anchor="center") 
             table.column(col, stretch=0, anchor="center")
             
-        for col in cols2:
-            table2.heading(col, text=col,anchor="center") 
-            table2.column(col, stretch=0, anchor="center")
+
            
         for x in range(len(clases)):
             table.insert("", "end", values=(x,clasesStr[x],fo[x],prob[x],fe[x],formula[x]))
-            
-        for x in range(len(clasesSinAjuste)):
-            table2.insert("", "end", values=(x,clasesStr2[x],feSinAjuste[x]))
-            
-        table2.grid(row=4, column=0,columnspan=5)
-        table.grid(row=5, column=0, columnspan=2)
+
+        table.grid(row=2, column=0, columnspan=6, rowspan=2)
+        
+        canvas=FigureCanvasTkAgg(fig,master=chiFrame)  
+  
+        canvas.get_tk_widget().grid(row=5,column=0,rowspan=2,columnspan=2)
         
         vsb=ttk.Scrollbar(chiFrame, orient="vertical", command=table.yview)
         vsb.place(relx=0.98, rely=0.58, relheight=0.27, relwidth=0.020)
         table.configure(yscrollcommand=vsb.set)
-
-        vsb2=ttk.Scrollbar(chiFrame, orient="vertical", command=table2.yview)
-        vsb2.place(relx=0.73, rely=0.30, relheight=0.268, relwidth=0.020)
-        table2.configure(yscrollcommand=vsb2.set)
         
         label4 = tk.Label(chiFrame, text="Grados de Libertdad: ", font=("Arial",17),padx=15, pady=15)
-        label4.grid(row=6,column=0)
+        label4.grid(row=5,column=2)
         labelGrados = tk.Label(chiFrame, text=str(grados), font=("Arial",15),padx=15, pady=15)
-        labelGrados.grid(row=6,column=1)
+        labelGrados.grid(row=5,column=3)
         
         label5 = tk.Label(chiFrame, text="Estadístico Prueba: ", font=("Arial",17),padx=15, pady=15)
-        label5.grid(row=7,column=0)
-        labelEst = tk.Label(chiFrame, text="3 < 5", font=("Arial",15),padx=15, pady=15,bg=color)
-        labelEst.grid(row=7,column=1)
+        label5.grid(row=6,column=2)
+        labelEst = tk.Label(chiFrame, text=(com), font=("Arial",15),padx=15, pady=15,bg=color)
+        labelEst.grid(row=6,column=3)
+        
+    def kov_frame(self,ris,n_1,n_1_r,ar,fig,com,text):
+        kovFrame = tk.Toplevel()
+        kovFrame.title("Kolgomorov-Smirnov")
+        cols = ('Ri','1/N', '(1/N)-Ri', 'Ri-(i-1)/N')
+        
+        table = ttk.Treeview(kovFrame, columns=cols, show='headings',selectmode='browse')
+        ris.pop(0)
+
+       
+        for col in cols:
+            table.heading(col, text=col,anchor="center") 
+            table.column(col, stretch=0, anchor="center")
+            
+
+        for x in range(len(n_1)):
+            table.insert("", "end", values=(ris[x],n_1[x],n_1_r[x],ar[x]))
+
+        table.grid(row=0, column=0, columnspan=4, rowspan=2)
+        
+        canvas=FigureCanvasTkAgg(fig,master=kovFrame)  
+  
+        canvas.get_tk_widget().grid(row=2,column=0, pady=10)
+        
+        if(com==1):
+            color="green"
+        else:
+            color="red"
+        
+        label2 = tk.Label(kovFrame, text=text, font=("Arial",17),fg=color)
+        label2.grid(row=2, column=1,padx=10)
         
     def validacionChiCuadrada(self,numeros,resultados):
         numeros.sort()
-        numeroMenor = numeros[0]  #RANGO
-        numeroMayor = numeros[len(numeros) - 1]  #RANGO
-        rango = numeroMayor - numeroMenor #RANGO
+        numeroMenor = numeros[0]
+        numeroMayor = numeros[len(numeros) - 1]
+        rango = numeroMayor - numeroMenor
         k = math.floor(1 + (3.322 * math.log10(len(numeros))))
-        sizeClase = round(rango / k, 5)  #Clase (Longuitud)
+        sizeClase = round(1 / k, 5)
+        print(sizeClase)
         
         limitesClases = []
         bandera = 0
@@ -215,13 +247,11 @@ class App(tk.Tk):
     
         #print(limitesClases)
         #print(frecuenciasAbsolutas)
-        clasesSinAjuste=limitesClases
-        feSinAjuste=frecuenciasAbsolutas
-        
-        limitesClases = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[0] #Columna 2
+
+        limitesClases = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[0]
         frecuenciasAbsolutas = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[1]
     
-        probabilidades = [] #Columna 4
+        probabilidades = []
         frecuenciasEsperadas = []
         elementosEstadisticoPrueba = []
         for indice in range(0, len(frecuenciasAbsolutas)):
@@ -233,37 +263,209 @@ class App(tk.Tk):
                 frecuenciasEsperadas.append(round(len(numeros) - sum(frecuenciasEsperadas), 3))
             elementosEstadisticoPrueba.append(round(math.pow((frecuenciasAbsolutas[indice] - frecuenciasEsperadas[indice]),2) / frecuenciasEsperadas[indice], 5)) 
         
-        
-        print(frecuenciasAbsolutas) #Columna 3
-        print(frecuenciasEsperadas) #Columna 5
-        #print(elementosEstadisticoPrueba) #Columna 6
+        indice=self.porcentajes.index(self.option2.get())
         estadisticoPrueba = round(sum(elementosEstadisticoPrueba), 5)
-        print(estadisticoPrueba)
-        gradosLibertad = (k - 1) 
-        print(gradosLibertad) 
+        gradosLibertad = (len(limitesClases) - 1) 
+        estadisticoChiCuadrada = round(self.tablaChiCuadrada[(gradosLibertad-1),indice], 5)
+        
+        fig = Figure(figsize=(5,5),dpi=100)
+        
+        etiquetasGrafica = limitesClases
+        ubicacionesBarras = numpy.arange(len(frecuenciasAbsolutas))
+        ancho = 0.35
+        
+        aux = fig.add_subplot(111)
+        encontradas = aux.bar(ubicacionesBarras - ancho / 2, frecuenciasAbsolutas, ancho, label="Encontradas")
+        esperadas = aux.bar(ubicacionesBarras + ancho / 2, frecuenciasEsperadas, ancho, label="Esperadas")
+        aux.set_xlabel("Rangos de las clases")
+        aux.set_ylabel("Numeros")
+        aux.set_title("Frecuencias Encontradas VS Esperadas")
+        aux.set_xticks(ubicacionesBarras)
+        aux.set_xticklabels(etiquetasGrafica)
+        aux.legend()
+        aux.bar_label(encontradas, padding=2)
+        aux.bar_label(esperadas, padding=2)
 
         numeroMenorStr=str(numeroMenor)
         numeroMayorStr=str(numeroMayor)
-        condicion=1
+        comprobacion=(str(estadisticoPrueba)+" < "+str(estadisticoChiCuadrada))
+        if estadisticoPrueba < estadisticoChiCuadrada:
+            condicion=1
+            color="green"
+        else:
+            condicion=0
+            color="red"
         
         label = tk.Label(resultados, text="Chi-Cuadrada", font=("Arial",17)).grid(row=2, column=0)
-        if condicion==1:
-            label2 = tk.Label(resultados, text=str(gradosLibertad), font=("Arial",17), fg="green")
-            label2.grid(row=2, column=1)
-            label2.bind("<Button-1>", lambda event, a=numeroMenorStr, b=numeroMayorStr, c=sizeClase, d=limitesClases, 
-                        e=frecuenciasAbsolutas, f=frecuenciasEsperadas, g=probabilidades, h=gradosLibertad, i=condicion, j=elementosEstadisticoPrueba,
-                        k=clasesSinAjuste, l=feSinAjuste:
-                        self.chi_frame(a,b,c,d,e,f,g,h,i,j,k,l) )
+
+        label2 = tk.Label(resultados, text=comprobacion, font=("Arial",17), fg=color)
+        label2.grid(row=2, column=1)
+        label2.bind("<Button-1>", lambda event, a=numeroMenorStr, b=numeroMayorStr, c=sizeClase, d=limitesClases, 
+                    e=frecuenciasAbsolutas, f=frecuenciasEsperadas, g=probabilidades, h=gradosLibertad, i=condicion, j=elementosEstadisticoPrueba, 
+                    fig=fig,com=comprobacion: 
+                    self.chi_frame(a,b,c,d,e,f,g,h,i,j,fig,com) )
+ 
+    def kolgomorovSmirnov(self,numeros,nivelSignificancia,resultados):
+        numeros.sort()
+        Ri = numeros 
+        N = len(numeros)
+        #Caculate 
+        i_n = []
+        i_n1 = []
+    
+        for i in range(1, N + 1): #Calcular i / N
+            i_n.append(i/N) 
+            
+        for i in range(0, N): #Calcular i / N - Ri
+            i_n1.append(abs(i_n[i] - Ri[i] ))
+        
+        ar = [Ri[0]]
+        for i in range (1, N): #Calcular Ri - ((i-1)/N)
+            ar.append(abs(Ri[i] - i_n[i-1]))
+    
+        Dplus = max(i_n1)
+        Dminus = max(ar)
+        Dtotal = max(Dplus, Dminus)
+    
+        #Link de la tabla https://simulacionutp2016.wordpress.com/2016/10/01/prueba-kolmogorov-smirnov/
+        tabla = [[0.9,0.95,0.975,0.99,0.995,0.9975,0.999,0.995],
+        [0.68337,0.77639,0.84189,0.9,0.92929,0.95,0.96838,0.97764],
+        [0.56481,0.6304,0.70760,0.78456,0.829,0.86428,0.9,0.92065],
+        [0.49265,0.56522,0.62394,0.68887,0.73424,0.77639,0.82217,0.85047],
+        [0.44698,0.50945,0.56328,0.62718,0.66853,0.70543,0.75,0.78137],
+        [0.41037,0.46799,0.51926,0.57741,0.61661,0.65287,0.69571,0.72479],
+        [0.38148,0.43607,0.48342,0.53844,0.57581,0.60975,0.65071,0.67930],
+        [0.35831,0.40962,0.45427,0.50654,0.54179,0.57429,0.61368,0.64098],
+        [0.33910,0.38746,0.43001,0.47960,0.51332,0.54443,0.58210,0.60846],
+        [0.32260,0.36866,0.40925,0.45562,0.48893,0.51872,0.555,0.58042],
+        [0.30829,0.35242,0.39122,0.43670,0.46770,0.49539,0.53135,0.55588],
+        [0.29577,0.33815,0.37543,0.41918,0.44905,0.47672,0.51047,0.53422],
+        [0.28470,0.32549,0.36143,0.40362,0.43247,0.45921,0.49189,0.51490],
+        [0.27481,0.31417,0.34890,0.38970,0.41762,0.44352,0.4725,0.49753],
+        [0.26589,0.30397,0.33750,0.37713,0.40420,0.42934,0.45611,0.48182],
+        [0.25778,0.29472,0.32733,0.36571,0.39201,0.41644,0.44637,0.4675],
+        [0.25039,0.28627,0.31796,0.35528,0.38086,0.40464,0.43380,0.45540],
+        [0.2436,0.27851,0.30936,0.34569,0.37062,0.39380,0.42224,0.44234],
+        [0.23735,0.27136,0.30143,0.33685,0.36117,0.38379,0.41156,0.43119],
+        [0.23156,0.26473,0.29408,0.32866,0.35241,0.37451,0.40165,0.42085],
+        [0.22517,0.25858,0.28724,0.32104,0.34426,0.36588,0.39243,0.41122],
+        [0.221,0.25283,0.28087,0.31394,0.33666,0.35782,0.38382,0.40223],
+        [0.21646,0.24746,0.2749,0.30728,0.32954,0.35027,0.37575,0.39380],
+        [0.21205,0.24242,0.26931,0.30104,0.32286,0.34318,0.36787,0.38588],
+        [0.20790,0.23768,0.26404,0.29518,0.31657,0.33651,0.36104,0.37743],
+        [0.20399,0.23320,0.25908,0.28962,0.30963,0.33022,0.35431,0.37139],
+        [0.20030,0.22898,0.25438,0.28438,0.30502,0.32425,0.34794,0.36473],
+        [0.19680,0.22497,0.24993,0.27942,0.29971,0.31862,0.34190,0.35842],
+        [0.19348,0.22117,0.24571,0.27471,0.29466,0.31327,0.33617,0.35242],
+        [0.19032,0.21756,0.2417,0.27023,0.28986,0.30818,0.33072,0.34672],
+        [0.18732,0.21412,0.23788,0.26596,0.28529,0.30333,0.32553,0.34129],
+        [0.18445,0.21085,0.23424,0.26189,0.28094,0.29870,0.32058,0.33611],
+        [0.18171,0.20771,0.23076,0.25801,0.27577,0.29428,0.31584,0.33115],
+        [0.17909,0.21472,0.22743,0.25429,0.27271,0.29005,0.31131,0.32641],
+        [0.17659,0.20158,0.22425,0.25073,0.26897,0.286,0.30597,0.32187],
+        [0.17418,0.1991,0.22119,0.24732,0.26532,0.28211,0.30281,0.31751],
+        [0.17188,0.19646,0.21826,0.24404,0.2618,0.27838,0.29882,0.31333],
+        [0.16966,0.19392,0.21544,0.24089,0.25843,0.27483,0.29498,0.30931],
+        [0.16753,0.19148,0.21273,0.23785,0.25518,0.27135,0.29125,0.30544],
+        [0.16547,0.18913,0.21012,0.23494,0.25205,0.26803,0.28772,0.30171]]
+                
+        datos = numpy.array(tabla)
+    
+        dataframe = pd.DataFrame(datos,index = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
+                                                22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40], columns = [0.20,0.10,0.05,0.02,0.01,0.005,0.002,0.001]) # Los columns son los porcentajes para KolgomorovSmirnov (20%, 10%, 5%, 2%, 1%)
+
+        if(nivelSignificancia >= 0.001 and nivelSignificancia <= 0.20):
+          if(N<41):
+            valorCritico = dataframe[nivelSignificancia][N]
+            print("El valor critico es:", valorCritico)
+    
+          elif(nivelSignificancia >= 0.2 or nivelSignificancia < 0.1):
+            valorCritico = 1.07 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          elif(nivelSignificancia >= 0.10 or nivelSignificancia < 0.05):
+            valorCritico = 1.22 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          elif(nivelSignificancia >= 0.05 or nivelSignificancia < 0.02):
+            valorCritico = 1.36 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          elif(nivelSignificancia >= 0.02 or nivelSignificancia < 0.01):
+            valorCritico = 1.52 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          elif(nivelSignificancia >= 0.01 or nivelSignificancia < 0.005):
+            valorCritico = 1.63 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          elif(nivelSignificancia >= 0.005 or nivelSignificancia < 0.002):
+            valorCritico = 1.73 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          elif(nivelSignificancia >= 0.002 or nivelSignificancia < 0.001):
+            valorCritico = 1.85 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          elif(nivelSignificancia >= 0.002 or nivelSignificancia < 0.001):
+            valorCritico = 1.85 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          elif(nivelSignificancia == 0.001):
+            valorCritico = 1.95 / math.sqrt(N)
+            print("El valor critico es:", valorCritico)
+          else:
+            print("No se puede realizar la operacion")  
         else:
-            label2 = tk.Label(resultados, text=str(gradosLibertad), font=("Arial",17), fg="red")
-            label2.grid(row=2, column=1)
-            label2.bind("<Button-1>", lambda event, a=numeroMenorStr, b=numeroMayorStr, c=sizeClase, d=limitesClases, 
-                        e=frecuenciasAbsolutas, f=frecuenciasEsperadas, g=probabilidades, h=gradosLibertad, i=condicion, j=elementosEstadisticoPrueba,
-                        k=clasesSinAjuste, l=feSinAjuste: 
-                        self.chi_frame(a,b,c,d,e,f,g,h,i,j,k,l) )
+          print("Nivel de Significancia Inválido")
+              
+        horizontales = []
+        verticales = []
+        verticales.append(0)
+        save_ri=Ri
+        
+        for i__n in range(len(i_n)):
+            for i in range(0,2):
+              verticales.append(i_n[i__n])
+        for i__n in range(len(Ri)):
+            for i in range(0,2):
+              horizontales.append(Ri[i__n])
+        horizontales.append(1)
+        
+        fig = Figure(figsize=(5,5),dpi=100)
+        
+        aux=fig.add_subplot(111)
+        
+        aux.plot(horizontales,verticales)
         
 
+        Ri.insert(0,0)
+        Ri.append(1)
+        aux.plot(Ri,Ri)
+      
+        aux.legend(['Sn(x)','F(x)'])
+        aux.set_ylabel('Probabilidad Acumulada')
+        aux.set_xlabel('R(i)')
+        aux.set_title("Comparacion de F(x) y Sn(x)")
+
+        comprobacion=(str(Dtotal)+" < "+str(valorCritico))
+        ##Para el Quiroz 
+        #Tabla de la ppt del prof
+        print("Numero de randoms", N) 
+        print("Numeros ordenados",Ri)
+        print("1er calculo",i_n) #Calcular i / N
+        print("2ndo calculo",i_n1) #Calcular i / N - Ri
+        print("3er calculo",ar) #Calcular Ri - ((i-1)/N)
+        print("D+ ",Dplus)
+        print("D- ",Dminus)
+        print("Dtotal ",Dtotal)
+
         
+        if  Dtotal < valorCritico:
+            condicion=1
+            color="green"
+        else:
+            condicion=0
+            color="red"
+        
+        label = tk.Label(resultados, text="Kolgomorov-Smirnov", font=("Arial",17)).grid(row=3, column=0)
+
+        label2 = tk.Label(resultados, text=comprobacion, font=("Arial",17),fg=color)
+        label2.grid(row=3, column=1)
+        label2.bind("<Button-1>", lambda event, a=save_ri, b=i_n, c=i_n1, d=ar, f=fig, com=condicion,text=comprobacion: 
+                    self.kov_frame(a,b,c,d,f,com,text) )
 
     def centrosCuadrados(self, semillaInicio, numerosAGenerar):
        semilla = int(semillaInicio)
@@ -319,7 +521,7 @@ class App(tk.Tk):
            table.configure(yscrollcommand=vsb.set)
 
        else:
-           print("La semilla otorgada no es un numero enetero de 4 digitos decimales" + "\n")
+           label = tk.Label(self.frame,  text='La semilla otorgada no es un numero enetero de 4 digitos decimales',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=2)
         
     def congruencial(self,semilla, multiplicador, incremento, modulo, numerosAGenerar,titulo):
         if modulo > 0 and modulo > multiplicador and multiplicador > 0 and modulo > incremento and (incremento > 0 or incremento == 0) and modulo > semilla and (semilla > 0 or semilla == 0):
@@ -373,20 +575,25 @@ class App(tk.Tk):
             vsb.place(relx=0.978, rely=0.2, relheight=0.8, relwidth=0.020)
             table.configure(yscrollcommand=vsb.set)
             
-            print(self.chi.get())
+            indice=self.porcentajes2.index(self.option3.get())
+            sig=self.significancia[indice]
             
             if self.chi.get() == 1:
                 self.validacionChiCuadrada(Ris,results)
-                
-                
+            if self.kov.get() == 1:
+                self.kolgomorovSmirnov(Ris,sig,results)
+
         else:
-            print("El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero")
+            label = tk.Label(self.frame,  text='El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
+
             
     def congruencialMixto(self,semilla, multiplicador, incremento, modulo, numerosAGenerar):
         if self.hullDobell(multiplicador, incremento, modulo):
             titulo="Congruencial Mixto"
             self.congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar,titulo)
         else:
+            label = tk.Label(self.frame,  text="Los parametros no logran cumplir la evaluacion de Hull-Dobell",font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
+
             print("Los parametros no logran cumplir la evaluacion de Hull-Dobell")
 
     def hullDobell(self,multiplicador, incremento, modulo): # a es el multiplicador, c es el incremento
@@ -553,26 +760,30 @@ class App(tk.Tk):
             vsb.place(relx=0.978, rely=0.2, relheight=0.8, relwidth=0.020)
             table.configure(yscrollcommand=vsb.set)
     
-    
     def cuadrados_frame(self, *args):
         self.frame['text']="Método de los Centros Cuadrados"
         for widget in self.frame.winfo_children():
             widget.destroy()
         
-        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=20,sticky="e")
         semilla_input = tk.Entry(self.frame, width=20)
-        semilla_input.grid(column=1,row=0)
+        semilla_input.grid(column=1,row=1,padx=40)
         
-        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10,sticky="e")
         total_input = tk.Entry(self.frame, width=20)
-        total_input.grid(column=1,row=1)
+        total_input.grid(column=1,row=2,padx=10)
         
-        sumbit_btn= tk.Button(self.frame, text="Generar",font = ("Castellar",8), command = lambda: self.aux_cuadrados_frame(semilla_input,total_input) ).place(relx=0.4, rely=1.1)
+        sumbit_btn= tk.Button(self.frame, text="Generar",font = ("Castellar",8), command = lambda: self.aux_cuadrados_frame(semilla_input,total_input))
+        sumbit_btn.grid(column=0,row=3, columnspan=3,pady=20)
         
     def aux_cuadrados_frame(self,semilla_input,total_input):
-        x1 = str(semilla_input.get())
-        x2=int(total_input.get())  
-        self.centrosCuadrados(x1,x2)
+
+        if semilla_input.get() != '' and total_input.get() != '':
+            x1 = str(semilla_input.get())
+            x2=int(total_input.get())  
+            self.centrosCuadrados(x1,x2)
+        else:
+            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=2)
         
     def congruencial_frame(self, *args):
 
@@ -581,58 +792,68 @@ class App(tk.Tk):
             widget.destroy()
 
         
-        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=1,pady=10,padx=10)
         semilla_input = ttk.Entry(self.frame, width=20)
-        semilla_input.grid(column=1,row=0)
+        semilla_input.grid(column=1,row=1,padx=10)
         
-        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=2,pady=10,padx=10)
         multiplicador_input = ttk.Entry(self.frame, width=20)
-        multiplicador_input.grid(column=1,row=1)
+        multiplicador_input.grid(column=1,row=2,padx=10)
         
-        incremento_label= ttk.Label(self.frame,  text='Incremento:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10)
+        incremento_label= ttk.Label(self.frame,  text='Incremento:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=3,pady=10,padx=10)
         incremento_input = ttk.Entry(self.frame, width=20)
-        incremento_input.grid(column=1,row=2)
+        incremento_input.grid(column=1,row=3,padx=10)
         
-        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
+        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=4,pady=10,padx=10)
         modulo_input = ttk.Entry(self.frame, width=20)
-        modulo_input.grid(column=1,row=3)
+        modulo_input.grid(column=1,row=4,padx=10)
         
-        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=4,padx=10,pady=10)
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=5,pady=10,padx=10)
         total_input = ttk.Entry(self.frame, width=20)
-        total_input.grid(column=1,row=4) 
+        total_input.grid(column=1,row=5,padx=10) 
         
-        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada",variable=self.chi)
-        chi_cuadrada.place(relx=-0.4, rely=0.0)
+        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada",variable=self.chi,justify="left")
+        chi_cuadrada.grid(sticky = "W", column=2,row=1) 
         
-        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
-        kolmogorov.place(relx=-0.4, rely=0.2)
-        
-        
+        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov,justify="left")
+        kolmogorov.grid(sticky = "W",column=2,row=3) 
+         
+        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
         porcentaje_Menu = tk.OptionMenu(
             self.frame,
             self.option2,
             *self.porcentajes,
            )
-        
-        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
         porcentaje_Menu.config(font=helv36)
-        porcentaje_Menu.place(relx=-0.4, rely=0.4)
         
+        porcentaje_Menu2 = tk.OptionMenu(
+            self.frame,
+            self.option3,
+            *self.porcentajes2,
+           )
+        porcentaje_Menu2.config(font=helv36)
+        
+        porcentaje_Menu.grid(sticky = "e",column=3,row=1,padx=5) 
+        porcentaje_Menu2.grid(sticky = "e",column=3,row=3,padx=5) 
         
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
                               font = ("Castellar",8),  
-                              command = lambda: self.aux_congruencial_frame(semilla_input,multiplicador_input,incremento_input,modulo_input,total_input) ).place(relx=0.4, rely=1.1)
+                              command = lambda: self.aux_congruencial_frame(semilla_input,multiplicador_input,incremento_input,modulo_input,total_input) )
+        sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
     
     def aux_congruencial_frame(self,semilla,multiplicador,incremento,modulo,total):
-        x1 = int(semilla.get())
-        x2=int(multiplicador.get())  
-        x3=int(incremento.get())  
-        x4=int(modulo.get())
-        x5=int(total.get()) 
-        titulo="Congurencial Lineal"
-        self.congruencial(x1,x2,x3,x4,x5,titulo)
-    
+        if semilla.get() != '' and multiplicador.get()!= '' and incremento.get()!= '' and modulo.get()!= '' and total.get()!= '':
+            x1 = int(semilla.get())
+            x2=int(multiplicador.get())  
+            x3=int(incremento.get())  
+            x4=int(modulo.get())
+            x5=int(total.get()) 
+            titulo="Congurencial Lineal"
+            self.congruencial(x1,x2,x3,x4,x5,titulo)
+        else:
+            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
+
     def congruencial_mixto_frame(self, *args):
 
         self.frame['text']="Método Congruencial Mixto"
@@ -641,54 +862,68 @@ class App(tk.Tk):
             widget.destroy()
 
         
-        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=1,pady=10,padx=10)
         semilla_input = ttk.Entry(self.frame, width=20)
-        semilla_input.grid(column=1,row=0)
+        semilla_input.grid(column=1,row=1,padx=10)
         
-        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=2,pady=10,padx=10)
         multiplicador_input = ttk.Entry(self.frame, width=20)
-        multiplicador_input.grid(column=1,row=1)
+        multiplicador_input.grid(column=1,row=2,padx=10)
         
-        incremento_label= ttk.Label(self.frame,  text='Incremento:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10)
+        incremento_label= ttk.Label(self.frame,  text='Incremento:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=3,pady=10,padx=10)
         incremento_input = ttk.Entry(self.frame, width=20)
-        incremento_input.grid(column=1,row=2)
+        incremento_input.grid(column=1,row=3,padx=10)
         
-        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
+        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=4,pady=10,padx=10)
         modulo_input = ttk.Entry(self.frame, width=20)
-        modulo_input.grid(column=1,row=3)
+        modulo_input.grid(column=1,row=4,padx=10)
         
-        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=4,padx=10,pady=10)
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=5,pady=10,padx=10)
         total_input = ttk.Entry(self.frame, width=20)
-        total_input.grid(column=1,row=4) 
+        total_input.grid(column=1,row=5,padx=10) 
         
-        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada", variable=self.chi)
-        chi_cuadrada.place(relx=-0.4, rely=0.0)
+        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada",variable=self.chi,justify="left")
+        chi_cuadrada.grid(sticky = "W", column=2,row=1) 
         
-        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
-        kolmogorov.place(relx=-0.4, rely=0.20)
-        
+        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov,justify="left")
+        kolmogorov.grid(sticky = "W",column=2,row=3) 
+         
+        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
         porcentaje_Menu = tk.OptionMenu(
             self.frame,
             self.option2,
             *self.porcentajes,
            )
-        
-        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
         porcentaje_Menu.config(font=helv36)
-        porcentaje_Menu.place(relx=-0.4, rely=0.4)
+        
+        porcentaje_Menu2 = tk.OptionMenu(
+            self.frame,
+            self.option3,
+            *self.porcentajes2,
+           )
+        porcentaje_Menu2.config(font=helv36)
+        
+        porcentaje_Menu.grid(sticky = "e",column=3,row=1,padx=5) 
+        porcentaje_Menu2.grid(sticky = "e",column=3,row=3,padx=5) 
         
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
                               font = ("Castellar",8),  
-                              command = lambda: self.aux_congruencial_mixto_frame(semilla_input,multiplicador_input,incremento_input,modulo_input,total_input) ).place(relx=0.4, rely=1.1)
+                              command = lambda: self.aux_congruencial_mixto_frame(semilla_input,multiplicador_input,incremento_input,modulo_input,total_input) )
+        sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
     
     def aux_congruencial_mixto_frame(self,semilla,multiplicador,incremento,modulo,total):
-        x1 = int(semilla.get())
-        x2=int(multiplicador.get())  
-        x3=int(incremento.get())  
-        x4=int(modulo.get())
-        x5=int(total.get()) 
-        self.congruencialMixto(x1,x2,x3,x4,x5)
+        if semilla.get() != '' and multiplicador.get()!= '' and incremento.get()!= '' and modulo.get()!= '' and total.get()!= '':
+            x1 = int(semilla.get())
+            x2=int(multiplicador.get())  
+            x3=int(incremento.get())  
+            x4=int(modulo.get())
+            x5=int(total.get()) 
+
+            self.congruencialMixto(x1,x2,x3,x4,x5)
+        else:
+            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
+
         
     def multiplicativo_frame(self, *args):
 
@@ -696,49 +931,62 @@ class App(tk.Tk):
         for widget in self.frame.winfo_children():
             widget.destroy()
             
-        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=1,pady=10,padx=10)
         semilla_input = ttk.Entry(self.frame, width=20)
-        semilla_input.grid(column=1,row=0)
+        semilla_input.grid(column=1,row=1,padx=10)
         
-        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=2,pady=10,padx=10)
         multiplicador_input = ttk.Entry(self.frame, width=20)
-        multiplicador_input.grid(column=1,row=1)
+        multiplicador_input.grid(column=1,row=2,padx=10)
         
-        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10)
+        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=3,pady=10,padx=10)
         modulo_input = ttk.Entry(self.frame, width=20)
-        modulo_input.grid(column=1,row=2)
+        modulo_input.grid(column=1,row=3,padx=10)
         
-        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
-        total_input = ttk.Entry(self.frame, width=20)  
-        total_input.grid(column=1,row=3)  
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=4,pady=10,padx=10)
+        total_input = ttk.Entry(self.frame, width=20)
+        total_input.grid(column=1,row=4,padx=10) 
         
-        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada", variable=self.chi)
-        chi_cuadrada.place(relx=-0.4, rely=0.0)
+        chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada",variable=self.chi,justify="left")
+        chi_cuadrada.grid(sticky = "W", column=2,row=1) 
         
-        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov)
-        kolmogorov.place(relx=-0.4, rely=0.2)
-        
+        kolmogorov=tk.Checkbutton(self.frame, text="Kolmogorov-Smirnov", variable=self.kov,justify="left")
+        kolmogorov.grid(sticky = "W",column=2,row=3) 
+         
+        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
         porcentaje_Menu = tk.OptionMenu(
             self.frame,
             self.option2,
             *self.porcentajes,
            )
-        
-        helv36 = tkFont.Font(family='MS Sans Serif', size=10)
         porcentaje_Menu.config(font=helv36)
-        porcentaje_Menu.place(relx=-0.4, rely=0.4)
+        
+        porcentaje_Menu2 = tk.OptionMenu(
+            self.frame,
+            self.option3,
+            *self.porcentajes2,
+           )
+        porcentaje_Menu2.config(font=helv36)
+        
+        porcentaje_Menu.grid(sticky = "e",column=3,row=1,padx=5) 
+        porcentaje_Menu2.grid(sticky = "e",column=3,row=3,padx=5) 
         
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
                               font = ("Castellar",8),  
-                              command = lambda: self.aux_multiplicativo_frame(semilla_input,multiplicador_input,modulo_input,total_input) ).place(relx=0.4, rely=1.1)
+                              command = lambda: self.aux_multiplicativo_frame(semilla_input,multiplicador_input,modulo_input,total_input) )
+        sumbit_btn.grid(column=0,row=5, columnspan=4,pady=20)
         
     def aux_multiplicativo_frame(self,semilla,multiplicador,modulo,total):
-        x1 = int(semilla.get())
-        x2=int(multiplicador.get())  
-        x3=int(modulo.get())
-        x4=int(total.get()) 
-        self.generadorMultiplicativo(x1,x2,x3,x4)
+        if semilla.get() != '' and multiplicador.get()!= '' and modulo.get()!= '' and total.get()!= '':
+            x1 = int(semilla.get())
+            x2=int(multiplicador.get())  
+            x3=int(modulo.get())
+            x4=int(total.get()) 
+            self.generadorMultiplicativo(x1,x2,x3,x4)
+        else:
+            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
+
         
     def congruencial_lineal_combinado_frame(self, *args):
 
@@ -747,37 +995,42 @@ class App(tk.Tk):
             widget.destroy()
         
         
-        disclaimer = ttk.Label(self.frame,  text='Introduce tus valores con el siguiente formato: 456, 7891, 7831, ...',font = ("Castellar",8)).grid(column=0,row=0,padx=10,pady=10)
+        disclaimer = ttk.Label(self.frame,  text='Introduce tus valores con el siguiente formato: 456, 7891, 7831, ...',font = ("Castellar",8))
+        disclaimer.grid(column=0,row=1,padx=10,pady=10,columnspan=2)
         
-        
-        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=10)
+        semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=2,padx=10,pady=10)
         semilla_input = ttk.Entry(self.frame, width=20)
-        semilla_input.grid(column=1,row=1)
+        semilla_input.grid(column=1,row=2,padx=10)
         
-        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(column=0,row=2,padx=10,pady=10)
+        multiplicador_label= ttk.Label(self.frame,  text='Multiplicador:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=3,padx=10,pady=10)
         multiplicador_input = ttk.Entry(self.frame, width=20)
-        multiplicador_input.grid(column=1,row=2)
+        multiplicador_input.grid(column=1,row=3,padx=10)
         
-        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(column=0,row=3,padx=10,pady=10)
+        modulo_label= ttk.Label(self.frame,  text='Modulo:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=4,padx=10,pady=10)
         modulo_input = ttk.Entry(self.frame, width=20)
-        modulo_input.grid(column=1,row=3)
+        modulo_input.grid(column=1,row=4,padx=10)
         
-        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(column=0,row=4,padx=10,pady=10)
+        total_label= ttk.Label(self.frame,  text='Total de Números a Generar:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=5,padx=10,pady=10)
         total_input = ttk.Entry(self.frame, width=20)     
-        total_input.grid(column=1,row=4)
+        total_input.grid(column=1,row=5,padx=10)
         
         sumbit_btn= tk.Button(self.frame, 
                               text="Generar",
                               font = ("Castellar",8),  
-                              command = lambda: self.aux_congruencial_lineal_combinado_frame(semilla_input,multiplicador_input,modulo_input,total_input) ).place(relx=0.4, rely=1.1)
+                              command = lambda: self.aux_congruencial_lineal_combinado_frame(semilla_input,multiplicador_input,modulo_input,total_input) )
+        
+        sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
         
     def aux_congruencial_lineal_combinado_frame(self,semilla,multiplicador,modulo,total):
-        x1 = str(semilla.get())
-        x2=str(multiplicador.get())  
-        x3=str(modulo.get())
-        x4=int(total.get()) 
-        self.congruencialLinealCombinado(x1,x2,x3,x4)
-    
+        if semilla.get() != '' and multiplicador.get()!= '' and modulo.get()!= '' and total.get()!= '':
+            x1 = str(semilla.get())
+            x2=str(multiplicador.get())  
+            x3=str(modulo.get())
+            x4=int(total.get()) 
+            self.congruencialLinealCombinado(x1,x2,x3,x4)
+        else:
+            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=2)
+        
     def option_changed(self, *args):
         if self.option.get() == self.menu[0]:
             self.cuadrados_frame()
