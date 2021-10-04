@@ -8,14 +8,11 @@ import numpy
 import pandas as pd
 import time
 import math
-import decimal
 from scipy.stats import chi2
 import matplotlib
 matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg,NavigationToolbar2Tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
-from numpy import random
 
 class App(tk.Tk):
     
@@ -32,11 +29,12 @@ class App(tk.Tk):
       "Método Congruencial Lineal Combinado")
         
         self.porcentajes=(
-            "99.5%", "99%", "97.5%", "95%", "90%", "75%", "50%", "25%", "10%", "5%", "2.5%", "1%", "0.5%"
+            "99.5%", "99%", "97.5%", "95%", "90%", "75%", "50%", "25%", "20%","10%", "5%", "2%", "1%", "0.5%", "0.2%", "0.1%"
             )
         self.porcentajes2=(
             "20%", "10%", "5%", "2%", "1%", "0.5%", "0.2%", "0.1%"
             )
+        
 
         # set up variable
         self.option = tk.StringVar(self)
@@ -46,7 +44,7 @@ class App(tk.Tk):
         self.option2 = tk.StringVar(self)
         self.option3 = tk.StringVar(self)
         
-        self.errorPercentages = numpy.array([0.995, 0.99, 0.975, 0.95, 0.90, 0.75, 0.5, 0.25, 0.10, 0.05, 0.025, 0.01, 0.005])
+        self.errorPercentages = numpy.array([0.995, 0.99, 0.975, 0.95, 0.90, 0.75, 0.5, 0.25,0.2 ,0.10, 0.05, 0.02, 0.01, 0.005,0.002,0.001])
         self.significancia = numpy.array([0.20,0.10,0.05,0.02,0.01,0.005,0.002,0.001])
         
         self.option2.set(self.porcentajes[0])
@@ -71,6 +69,9 @@ class App(tk.Tk):
 
         self.frame = tk.LabelFrame(self,text="Método de los Centros Cuadrados", borderwidth=8,  labelanchor = "nw", font = ("Castellar",12))
         self.frame.grid(column=0, row=1,pady=20,padx=10)
+        self.errorText= tk.StringVar()
+        self.errorText.set(" ")
+        self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
 
         # option menu
         option_menu = tk.OptionMenu(
@@ -146,11 +147,9 @@ class App(tk.Tk):
         label3.grid(row=0,column=4)
         labelK = tk.Label(chiFrame, text=str(len(clases)), font=("Arial",14))
         labelK.grid(row=0,column=5)
-
-        
+  
         cols = ('K','Clase', 'FOi observado', 'Probabilidad', 'FEi esperado', '(FO - FE)^2/FE')
-        #, '(FO - FE)^2/FE'
-        
+
         clasesStr=[] 
 
         if(aprob==1):
@@ -162,44 +161,61 @@ class App(tk.Tk):
             aux=""
             aux=str(clases[x][0])+" - " + str(clases[x][1]) 
             clasesStr.append(aux)
-            
 
         table = ttk.Treeview(chiFrame, columns=cols, show='headings',selectmode='browse')
-
        
         for col in cols:
             table.heading(col, text=col,anchor="center") 
             table.column(col, stretch=0, anchor="center")
-            
-
            
         for x in range(len(clases)):
             table.insert("", "end", values=(x,clasesStr[x],fo[x],prob[x],fe[x],formula[x]))
 
-        table.grid(row=2, column=0, columnspan=6, rowspan=2)
+        
+        headerTable=tk.Label(chiFrame, text="Distribuciones de Frecuencias ", font=("Arial",17,'bold'), pady=15)
+        headerTable.grid(row=4,column=0, pady=10,columnspan=6)
         
         canvas=FigureCanvasTkAgg(fig,master=chiFrame)  
-  
-        canvas.get_tk_widget().grid(row=5,column=0,rowspan=2,columnspan=2)
+        canvas.get_tk_widget().grid(row=5,column=0,columnspan=6)
         
+        table.grid(row=2, column=0, columnspan=6)
         vsb=ttk.Scrollbar(chiFrame, orient="vertical", command=table.yview)
-        vsb.place(relx=0.98, rely=0.58, relheight=0.27, relwidth=0.020)
+        vsb.place(relx=0.98, rely=0.04, relheight=0.247, relwidth=0.020)
         table.configure(yscrollcommand=vsb.set)
         
-        label4 = tk.Label(chiFrame, text="Grados de Libertdad: ", font=("Arial",17),padx=15, pady=15)
-        label4.grid(row=5,column=2)
-        labelGrados = tk.Label(chiFrame, text=str(grados), font=("Arial",15),padx=15, pady=15)
-        labelGrados.grid(row=5,column=3)
+        label5 = tk.Label(chiFrame, text="Estadístico Prueba: ", font=("Arial",17,'bold'), pady=15)
+        label5.grid(row=7,column=0,columnspan=3)
+        labelEst = tk.Label(chiFrame, text=(com), font=("Arial",15), pady=15,fg=color)
+        labelEst.grid(row=7,column=2,columnspan=3)
         
-        label5 = tk.Label(chiFrame, text="Estadístico Prueba: ", font=("Arial",17),padx=15, pady=15)
-        label5.grid(row=6,column=2)
-        labelEst = tk.Label(chiFrame, text=(com), font=("Arial",15),padx=15, pady=15,bg=color)
-        labelEst.grid(row=6,column=3)
-        
-    def kov_frame(self,ris,n_1,n_1_r,ar,fig,com,text):
+    def kov_frame(self,ris,n_1,n_1_r,ar,fig,com,text,a,b,c,d):
         kovFrame = tk.Toplevel()
         kovFrame.title("Kolgomorov-Smirnov")
         cols = ('Ri','1/N', '(1/N)-Ri', 'Ri-(i-1)/N')
+        
+        a=round(a,4)
+        b=round(b,4)
+        c=round(c,4)
+        d=round(d,4)        
+        label = tk.Label(kovFrame, text="Numero de elementos:", font=("Arial",17,'bold'))
+        label.grid(row=0,column=0,pady=10)
+        labelRango = tk.Label(kovFrame, text=a, font=("Arial",14))
+        labelRango.grid(row=0,column=1,pady=10)
+        
+        label2 = tk.Label(kovFrame, text="D+: ", font=("Arial",17,'bold'))
+        label2.grid(row=0,column=2,pady=10)
+        labelClase = tk.Label(kovFrame, text=b, font=("Arial",14))
+        labelClase.grid(row=0,column=3,pady=10)
+        
+        label3 = tk.Label(kovFrame, text="D-: ", font=("Arial",17,'bold'))
+        label3.grid(row=0,column=4,pady=10)
+        labelK = tk.Label(kovFrame, text=c, font=("Arial",14))
+        labelK.grid(row=0,column=5,pady=10)
+        
+        label4 = tk.Label(kovFrame, text="Dmax: ", font=("Arial",17,'bold'))
+        label4.grid(row=0,column=6,pady=10)
+        labelN = tk.Label(kovFrame, text=d, font=("Arial",14))
+        labelN.grid(row=0,column=7,pady=10)
         
         table = ttk.Treeview(kovFrame, columns=cols, show='headings',selectmode='browse')
         ris.pop(0)
@@ -213,19 +229,29 @@ class App(tk.Tk):
         for x in range(len(n_1)):
             table.insert("", "end", values=(ris[x],n_1[x],n_1_r[x],ar[x]))
 
-        table.grid(row=0, column=0, columnspan=4, rowspan=2)
+            
+        headerTable=tk.Label(kovFrame, text="Comparación entre F(X) y Sn(X)", font=("Arial",17,'bold'))
+        headerTable.grid(row=2,column=0, pady=10,padx=20,columnspan=8)
+        table.grid(row=1, column=0, columnspan=8, rowspan=1)
+        vsb=ttk.Scrollbar(kovFrame, orient="vertical", command=table.yview)
+        vsb.place(relx=0.98, rely=0.06, relheight=0.245, relwidth=0.020)
+        table.configure(yscrollcommand=vsb.set)
+                
+        
         
         canvas=FigureCanvasTkAgg(fig,master=kovFrame)  
   
-        canvas.get_tk_widget().grid(row=2,column=0, pady=10)
+        canvas.get_tk_widget().grid(row=3,column=0,columnspan=8)
         
         if(com==1):
             color="green"
         else:
             color="red"
-        
-        label2 = tk.Label(kovFrame, text=text, font=("Arial",17),fg=color)
-        label2.grid(row=2, column=1,padx=10)
+            
+        labelC = tk.Label(kovFrame, text="Comprobación: ", font=("Arial",17,'bold'))
+        labelC.grid(row=4, column=0,columnspan=4, pady=20)
+        label5 = tk.Label(kovFrame, text=text, font=("Arial",15),fg=color)
+        label5.grid(row=4, column=2,columnspan=4, pady=20)
         
     def validacionChiCuadrada(self,numeros,resultados):
         numeros.sort()
@@ -464,11 +490,26 @@ class App(tk.Tk):
 
         label2 = tk.Label(resultados, text=comprobacion, font=("Arial",17),fg=color)
         label2.grid(row=3, column=1)
-        label2.bind("<Button-1>", lambda event, a=save_ri, b=i_n, c=i_n1, d=ar, f=fig, com=condicion,text=comprobacion: 
-                    self.kov_frame(a,b,c,d,f,com,text) )
+        label2.bind("<Button-1>", lambda event, a=save_ri, b=i_n, c=i_n1, d=ar, f=fig, com=condicion,text=comprobacion,g=N,h=Dplus,i=Dminus,j=Dtotal: 
+                    self.kov_frame(a,b,c,d,f,com,text,g,h,i,j) )
 
     def centrosCuadrados(self, semillaInicio, numerosAGenerar):
-       semilla = int(semillaInicio)
+       try:
+           semilla = int(semillaInicio)
+       except:
+           self.errorText.set('La semilla debe ser un numero entero')
+           self.errorMessage.grid_configure(column=0,row=0,columnspan=2)
+           return
+           
+       if type(numerosAGenerar) != int:
+           self.errorText.set('Numeros a Generar debe ser un entero')
+           self.errorMessage.grid_configure(column=0,row=0,columnspan=2)
+           return
+       if numerosAGenerar < 1:
+           self.errorText.set('Numeros a Generar debe ser mayor a 0')
+           self.errorMessage.grid_configure(column=0,row=0,columnspan=2)
+           return
+       
        
        if len(str(semillaInicio)) == 4 and semilla >= 100 and semilla <= 9999:
            numerosAleatorios = []
@@ -517,13 +558,19 @@ class App(tk.Tk):
                
            table.grid(row=1, column=0, columnspan=2)
            vsb=ttk.Scrollbar(results, orient="vertical", command=table.yview)
-           vsb.place(relx=0.978, rely=0.2, relheight=0.8, relwidth=0.020)
+           vsb.place(relx=0.978, rely=0.2, relheight=0., relwidth=0.020)
            table.configure(yscrollcommand=vsb.set)
 
        else:
-           label = tk.Label(self.frame,  text='La semilla otorgada no es un numero enetero de 4 digitos decimales',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=2)
-        
+           self.errorText.set('La semilla otorgada no es un numero enetero de 4 digitos decimales')
+           self.errorMessage.grid_configure(column=0,row=0,columnspan=2) 
+           
     def congruencial(self,semilla, multiplicador, incremento, modulo, numerosAGenerar,titulo):
+        if numerosAGenerar < 1:
+           self.errorText.set('Numeros a Generar debe ser mayor a 0')
+           self.errorMessage.grid_configure(column=0,row=0,columnspan=4)
+           return
+        
         if modulo > 0 and modulo > multiplicador and multiplicador > 0 and modulo > incremento and (incremento > 0 or incremento == 0) and modulo > semilla and (semilla > 0 or semilla == 0):
             numerosAleatorios = []
             Ris = []
@@ -584,16 +631,16 @@ class App(tk.Tk):
                 self.kolgomorovSmirnov(Ris,sig,results)
 
         else:
-            label = tk.Label(self.frame,  text='El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
-
+            self.errorText.set('El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
             
     def congruencialMixto(self,semilla, multiplicador, incremento, modulo, numerosAGenerar):
         if self.hullDobell(multiplicador, incremento, modulo):
             titulo="Congruencial Mixto"
             self.congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar,titulo)
         else:
-            label = tk.Label(self.frame,  text="Los parametros no logran cumplir la evaluacion de Hull-Dobell",font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
-
+            self.errorText.set('Los parametros no logran cumplir la evaluacion de Hull-Dobell')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
             print("Los parametros no logran cumplir la evaluacion de Hull-Dobell")
 
     def hullDobell(self,multiplicador, incremento, modulo): # a es el multiplicador, c es el incremento
@@ -628,6 +675,11 @@ class App(tk.Tk):
         return True
     
     def generadorMultiplicativo(self,semilla, multiplicador, modulo, numerosAGenerar):
+        if numerosAGenerar < 1:
+           self.errorText.set('Numeros a Generar debe ser mayor a 0')
+           self.errorMessage.grid_configure(column=0,row=0,columnspan=4)
+           return
+       
         if (semilla == 0 or semilla > 0) and (multiplicador == 0 or multiplicador > 0) and (modulo == 0 or modulo > 0) and modulo > multiplicador and modulo > semilla and float(semilla).is_integer() and float(multiplicador).is_integer() and float(modulo).is_integer():
             numerosAleatorios = []
             Ris = []
@@ -669,11 +721,17 @@ class App(tk.Tk):
             vsb=ttk.Scrollbar(results, orient="vertical", command=table.yview)
             vsb.place(relx=0.978, rely=0.2, relheight=0.8, relwidth=0.020)
             table.configure(yscrollcommand=vsb.set)
+                        
+            indice=self.porcentajes2.index(self.option3.get())
+            sig=self.significancia[indice]
             
             if self.chi.get() == 1:
                 self.validacionChiCuadrada(Ris,results)
+            if self.kov.get() == 1:
+                self.kolgomorovSmirnov(Ris,sig,results)
         else:
-            print("Los parametros introducidos por el usuario no cumplen las espeficaciones para este generador") 
+            self.errorText.set('El modulo tiene que ser mayor a los demas valores; el multiplicador y semilla deben ser mayores o iguales a Cero')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
     
     def separacionValores(self,listaValores):
         arregloValores = []
@@ -683,9 +741,13 @@ class App(tk.Tk):
             if caracter.isdigit():
                 valorenCurso += caracter
                 if indice == len(listaValores) - 1:
+                    if int(valorenCurso) == 0:
+                        return False
                     (arregloValores).append(int(valorenCurso))
                     valorenCurso = ""
             elif caracter == ",":
+                if int(valorenCurso) == 0:
+                    return False
                 arregloValores.append(int(valorenCurso))
                 valorenCurso = ""
             elif caracter.isspace():
@@ -697,11 +759,18 @@ class App(tk.Tk):
         return arregloValores 
     
     def congruencialLinealCombinado(self,semillasOriginales, multiplicadores, modulos, numerosAGenerar):
+        if numerosAGenerar < 1:
+           self.errorText.set('Numeros a Generar debe ser mayor a 0')
+           self.errorMessage.grid_configure(column=0,row=0,columnspan=2)
+           return
         if(self.separacionValores(semillasOriginales) != False and self.separacionValores(multiplicadores) != False and self.separacionValores(modulos) != False): 
             semillas = self.separacionValores(semillasOriginales)
             multiplicadores = self.separacionValores(multiplicadores)
             modulos = self.separacionValores(modulos)
-    
+            if len(semillas) != len(multiplicadores) or len(multiplicadores) != len(modulos):
+                self.errorText.set('Introducir el mismo número de semillas, módulos y multiplicadores')
+                self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
+                return
             Ris = []
             numerosAleatorios = []
             semillasHistoricas = []
@@ -759,6 +828,10 @@ class App(tk.Tk):
             vsb=ttk.Scrollbar(results, orient="vertical", command=table.yview)
             vsb.place(relx=0.978, rely=0.2, relheight=0.8, relwidth=0.020)
             table.configure(yscrollcommand=vsb.set)
+        else:
+            self.errorText.set('Favor de seguir el formato y que todos los numeros sean enteros positivos y  mayores a 0')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
+            
     
     def cuadrados_frame(self, *args):
         self.frame['text']="Método de los Centros Cuadrados"
@@ -777,14 +850,22 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=3, columnspan=3,pady=20)
         
     def aux_cuadrados_frame(self,semilla_input,total_input):
-
+        self.errorText.set(' ')
+        self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
         if semilla_input.get() != '' and total_input.get() != '':
             x1 = str(semilla_input.get())
-            x2=int(total_input.get())  
+            try:    
+                x2 = int(total_input.get())  
+            except:
+                self.errorText.set('Numeros a Generar debe se numero entero')
+                self.errorMessage.grid(column=0,row=0,columnspan=2)
+                return
             self.centrosCuadrados(x1,x2)
         else:
-            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=2)
-        
+            #Favor de llenar todos los rubros
+            self.errorText.set('Favor de llenar todos los rubros')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=2)    
+            
     def congruencial_frame(self, *args):
 
         self.frame['text']="Método Congruencial"
@@ -843,17 +924,27 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
     
     def aux_congruencial_frame(self,semilla,multiplicador,incremento,modulo,total):
+        self.errorText.set(' ')
+        self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
+        
         if semilla.get() != '' and multiplicador.get()!= '' and incremento.get()!= '' and modulo.get()!= '' and total.get()!= '':
-            x1 = int(semilla.get())
-            x2=int(multiplicador.get())  
-            x3=int(incremento.get())  
-            x4=int(modulo.get())
-            x5=int(total.get()) 
+            try:
+                x1 = int(semilla.get())
+                x2 = int(multiplicador.get())  
+                x3 = int(incremento.get())  
+                x4 = int(modulo.get())
+                x5 = int(total.get()) 
+            except:
+                self.errorText.set('Verifica que todos los campos sean Números Enteros')
+                self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
+                return
+            
             titulo="Congurencial Lineal"
             self.congruencial(x1,x2,x3,x4,x5,titulo)
         else:
-            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
-
+            self.errorText.set('Favor de llenar todos los rubros')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
+            
     def congruencial_mixto_frame(self, *args):
 
         self.frame['text']="Método Congruencial Mixto"
@@ -913,17 +1004,24 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
     
     def aux_congruencial_mixto_frame(self,semilla,multiplicador,incremento,modulo,total):
+        self.errorText.set(' ')
+        self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
         if semilla.get() != '' and multiplicador.get()!= '' and incremento.get()!= '' and modulo.get()!= '' and total.get()!= '':
-            x1 = int(semilla.get())
-            x2=int(multiplicador.get())  
-            x3=int(incremento.get())  
-            x4=int(modulo.get())
-            x5=int(total.get()) 
-
+            try:
+                x1 = int(semilla.get())
+                x2 = int(multiplicador.get())  
+                x3 = int(incremento.get())  
+                x4 = int(modulo.get())
+                x5 = int(total.get()) 
+            except:
+                self.errorText.set('Verifica que todos los campos sean Números Enteros')
+                self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
+                return
+            
             self.congruencialMixto(x1,x2,x3,x4,x5)
         else:
-            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
-
+            self.errorText.set('Favor de llenar todos los rubros')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
         
     def multiplicativo_frame(self, *args):
 
@@ -978,16 +1076,23 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=5, columnspan=4,pady=20)
         
     def aux_multiplicativo_frame(self,semilla,multiplicador,modulo,total):
+        self.errorText.set(' ')
+        self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
         if semilla.get() != '' and multiplicador.get()!= '' and modulo.get()!= '' and total.get()!= '':
-            x1 = int(semilla.get())
-            x2=int(multiplicador.get())  
-            x3=int(modulo.get())
-            x4=int(total.get()) 
+            try:
+                x1 = int(semilla.get())
+                x2=int(multiplicador.get())  
+                x3=int(modulo.get())
+                x4=int(total.get()) 
+            except:
+                self.errorText.set('Verifica que todos los campos sean Números Enteros')
+                self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
+                return
             self.generadorMultiplicativo(x1,x2,x3,x4)
         else:
-            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=4)
-
-        
+            self.errorText.set('Favor de llenar todos los rubros')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
+            
     def congruencial_lineal_combinado_frame(self, *args):
 
         self.frame['text']="Método Congruencial Lineal Combinado"
@@ -1022,14 +1127,23 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
         
     def aux_congruencial_lineal_combinado_frame(self,semilla,multiplicador,modulo,total):
+        self.errorText.set(' ')
+        self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
+        
         if semilla.get() != '' and multiplicador.get()!= '' and modulo.get()!= '' and total.get()!= '':
             x1 = str(semilla.get())
             x2=str(multiplicador.get())  
             x3=str(modulo.get())
-            x4=int(total.get()) 
+            try:
+                x4=int(total.get()) 
+            except:
+                self.errorText.set('Numeros a Generar debe ser numero entero mayor a 0')
+                self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
+                return
             self.congruencialLinealCombinado(x1,x2,x3,x4)
         else:
-            label = tk.Label(self.frame,  text='Favor de llenar todos los rubros',font = ("Castellar",8),fg="red").grid(column=0,row=0,padx=10,pady=10,columnspan=2)
+            self.errorText.set('Favor de llenar todos los rubros')
+            self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
         
     def option_changed(self, *args):
         if self.option.get() == self.menu[0]:
