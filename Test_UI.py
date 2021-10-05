@@ -11,23 +11,25 @@ import math
 from scipy.stats import chi2
 import matplotlib
 matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg,NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
 class App(tk.Tk):
     
     def __init__(self):
+        #Declaracion de la ventana principal y el tamaño de esta
         super().__init__()
         self.geometry("1000x450")
         self.title('Generador de Números Aleatorios')
 
-        # initialize data
+        # Inicialización del menu principal
         self.menu = ("Método de los Centros Cuadrados",
       "Método Congruencial",
       "Método Congruencial Mixto",
       "Generador Multiplicativo",
       "Método Congruencial Lineal Combinado")
         
+        #Porcentajes declarados para el display de las comprobaciones
         self.porcentajes=(
             "99.5%", "99%", "97.5%", "95%", "90%", "75%", "50%", "25%", "20%","10%", "5%", "2%", "1%", "0.5%", "0.2%", "0.1%"
             )
@@ -36,7 +38,7 @@ class App(tk.Tk):
             )
         
 
-        # set up variable
+        # Variables para manjear las opciones del menu en caso de comprobaciones
         self.option = tk.StringVar(self)
         
         self.option.set(self.menu[0])
@@ -60,13 +62,14 @@ class App(tk.Tk):
         self.create_wigets()
 
     def create_wigets(self):
-        # padding for widgets using the grid layout
+        # Paddings genéricos
         paddings = {'padx': 5, 'pady': 5}
 
-        # label
+        # Titulo de la ventana principal
         label = ttk.Label(self,  text='SIMULADOR DE NUMEROS RANDOM',font = ("Castellar",15))
         label.grid(column=0, row=0, sticky=tk.W, **paddings)
 
+        # Marco donde delimitamos los inputs de los diferentes métodos y declaración del mensaje de error
         self.frame = tk.LabelFrame(self,text="Método de los Centros Cuadrados", borderwidth=8,  labelanchor = "nw", font = ("Castellar",12))
         self.frame.grid(column=0, row=1,pady=20,padx=10)
         self.errorText= tk.StringVar()
@@ -130,9 +133,11 @@ class App(tk.Tk):
     
     def chi_frame(self,menor,mayor,claseLongitud,clases,fo,fe,prob,grados,aprob,formula,fig,com):
         
+        # Creación de una nueva ventana para el display de los datos más relevantes del metodo de chi cuadrada
         chiFrame = tk.Toplevel()
         chiFrame.title("Chi-Cuadrada")
         
+        # Labels para desplegar datos del algoritmo
         label = tk.Label(chiFrame, text="Rango:", font=("Arial",17,'bold'))
         label.grid(row=0,column=0)
         labelRango = tk.Label(chiFrame, text=(menor+" - "+mayor), font=("Arial",14))
@@ -147,9 +152,9 @@ class App(tk.Tk):
         label3.grid(row=0,column=4)
         labelK = tk.Label(chiFrame, text=str(len(clases)), font=("Arial",14))
         labelK.grid(row=0,column=5)
-  
-        cols = ('K','Clase', 'FOi observado', 'Probabilidad', 'FEi esperado', '(FO - FE)^2/FE')
 
+        # Declaración de la tabla para diplay de las clases y frecuencias
+        cols = ('K','Clase', 'FOi observado', 'Probabilidad', 'FEi esperado', '(FO - FE)^2/FE')
         clasesStr=[] 
 
         if(aprob==1):
@@ -175,24 +180,32 @@ class App(tk.Tk):
         headerTable=tk.Label(chiFrame, text="Distribuciones de Frecuencias ", font=("Arial",17,'bold'), pady=15)
         headerTable.grid(row=4,column=0, pady=10,columnspan=6)
         
+        # Gráfica de las frecuencias por clases y  el toolbar para observar de manera más limpia, en caso de que se amonten las barras
         canvas=FigureCanvasTkAgg(fig,master=chiFrame)  
         canvas.get_tk_widget().grid(row=5,column=0,columnspan=6)
-        
+        toolbarFrame = tk.Frame(master=chiFrame)
+        toolbarFrame.grid(row=7,column=0)
+        toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
+
+        # Scrollbar para la tabla en caso que el el no. de datos sobrepase el tamaño
         table.grid(row=2, column=0, columnspan=6)
         vsb=ttk.Scrollbar(chiFrame, orient="vertical", command=table.yview)
         vsb.place(relx=0.98, rely=0.04, relheight=0.247, relwidth=0.020)
         table.configure(yscrollcommand=vsb.set)
         
+        # La comprobación coloraeda indicando si se acepta o no la valiidación
         label5 = tk.Label(chiFrame, text="Estadístico Prueba: ", font=("Arial",17,'bold'), pady=15)
         label5.grid(row=7,column=0,columnspan=3)
         labelEst = tk.Label(chiFrame, text=(com), font=("Arial",15), pady=15,fg=color)
         labelEst.grid(row=7,column=2,columnspan=3)
         
     def kov_frame(self,ris,n_1,n_1_r,ar,fig,com,text,a,b,c,d):
+        
+        # Creación de una nueva ventana para el display de los datos más relevantes del metodo de chi cuadrada
         kovFrame = tk.Toplevel()
         kovFrame.title("Kolgomorov-Smirnov")
-        cols = ('Ri','1/N', '(1/N)-Ri', 'Ri-(i-1)/N')
         
+        # Labels para desplegar datos del algoritmo
         a=round(a,4)
         b=round(b,4)
         c=round(c,4)
@@ -217,6 +230,9 @@ class App(tk.Tk):
         labelN = tk.Label(kovFrame, text=d, font=("Arial",14))
         labelN.grid(row=0,column=7,pady=10)
         
+        
+        # Declaración de la tabla para diplay de las iteracions de Kolmogorov
+        cols = ('Ri','1/N', '(1/N)-Ri', 'Ri-(i-1)/N')
         table = ttk.Treeview(kovFrame, columns=cols, show='headings',selectmode='browse')
         ris.pop(0)
 
@@ -233,25 +249,30 @@ class App(tk.Tk):
         headerTable=tk.Label(kovFrame, text="Comparación entre F(X) y Sn(X)", font=("Arial",17,'bold'))
         headerTable.grid(row=2,column=0, pady=10,padx=20,columnspan=8)
         table.grid(row=1, column=0, columnspan=8, rowspan=1)
+        
+        #Scrollbar para la tabla
         vsb=ttk.Scrollbar(kovFrame, orient="vertical", command=table.yview)
         vsb.place(relx=0.98, rely=0.06, relheight=0.245, relwidth=0.020)
         table.configure(yscrollcommand=vsb.set)
                 
         
-        
+        # Gráfica de los datos de smirnov y el toolbar para observar de manera más limpia, en caso de que se amonten los datos
         canvas=FigureCanvasTkAgg(fig,master=kovFrame)  
-  
         canvas.get_tk_widget().grid(row=3,column=0,columnspan=8)
+        toolbarFrame = tk.Frame(master=kovFrame)
+        toolbarFrame.grid(row=4,column=0,columnspan=8)
+        toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
         
         if(com==1):
             color="green"
         else:
             color="red"
-            
+        
+        # La comprobación coloraeda indicando si se acepta o no la valiidación
         labelC = tk.Label(kovFrame, text="Comprobación: ", font=("Arial",17,'bold'))
-        labelC.grid(row=4, column=0,columnspan=4, pady=20)
+        labelC.grid(row=5, column=0,columnspan=4, pady=20)
         label5 = tk.Label(kovFrame, text=text, font=("Arial",15),fg=color)
-        label5.grid(row=4, column=2,columnspan=4, pady=20)
+        label5.grid(row=5, column=2,columnspan=4, pady=20)
         
     def validacionChiCuadrada(self,numeros,resultados):
         numeros.sort()
@@ -294,12 +315,13 @@ class App(tk.Tk):
         gradosLibertad = (len(limitesClases) - 1) 
         estadisticoChiCuadrada = round(self.tablaChiCuadrada[(gradosLibertad-1),indice], 5)
         
-        fig = Figure(figsize=(5,5),dpi=100)
-        
+        # Configuración para el display de la gráfica
+        fig = Figure(figsize=(12,5),dpi=100)
         etiquetasGrafica = limitesClases
         ubicacionesBarras = numpy.arange(len(frecuenciasAbsolutas))
         ancho = 0.35
         
+        # Creación de la gráfica con la libreria matplotlib y tkinter
         aux = fig.add_subplot(111)
         encontradas = aux.bar(ubicacionesBarras - ancho / 2, frecuenciasAbsolutas, ancho, label="Encontradas")
         esperadas = aux.bar(ubicacionesBarras + ancho / 2, frecuenciasEsperadas, ancho, label="Esperadas")
@@ -312,6 +334,7 @@ class App(tk.Tk):
         aux.bar_label(encontradas, padding=2)
         aux.bar_label(esperadas, padding=2)
 
+        # Variable para diplay de la validación
         numeroMenorStr=str(numeroMenor)
         numeroMayorStr=str(numeroMayor)
         comprobacion=(str(estadisticoPrueba)+" < "+str(estadisticoChiCuadrada))
@@ -322,6 +345,7 @@ class App(tk.Tk):
             condicion=0
             color="red"
         
+        # Deplega los resultado de la validación y crea un hipervínculo a los detalles del método
         label = tk.Label(resultados, text="Chi-Cuadrada", font=("Arial",17)).grid(row=2, column=0)
 
         label2 = tk.Label(resultados, text=comprobacion, font=("Arial",17), fg=color)
@@ -450,34 +474,22 @@ class App(tk.Tk):
               horizontales.append(Ri[i__n])
         horizontales.append(1)
         
+        # Configuración para el display de la gráfica
         fig = Figure(figsize=(5,5),dpi=100)
-        
         aux=fig.add_subplot(111)
-        
         aux.plot(horizontales,verticales)
-        
-
         Ri.insert(0,0)
         Ri.append(1)
-        aux.plot(Ri,Ri)
-      
+        aux.plot(Ri,Ri)      
         aux.legend(['Sn(x)','F(x)'])
         aux.set_ylabel('Probabilidad Acumulada')
         aux.set_xlabel('R(i)')
         aux.set_title("Comparacion de F(x) y Sn(x)")
-
-        comprobacion=(str(Dtotal)+" < "+str(valorCritico))
-        ##Para el Quiroz 
-        #Tabla de la ppt del prof
-        print("Numero de randoms", N) 
-        print("Numeros ordenados",Ri)
-        print("1er calculo",i_n) #Calcular i / N
-        print("2ndo calculo",i_n1) #Calcular i / N - Ri
-        print("3er calculo",ar) #Calcular Ri - ((i-1)/N)
-        print("D+ ",Dplus)
-        print("D- ",Dminus)
-        print("Dtotal ",Dtotal)
-
+        
+        # Variable para diplay de la validación
+        auxDtotal=round(Dtotal,10)
+        auxCritico=round(valorCritico,10)
+        comprobacion=(str(auxDtotal)+" < "+str(auxCritico))
         
         if  Dtotal < valorCritico:
             condicion=1
@@ -486,6 +498,7 @@ class App(tk.Tk):
             condicion=0
             color="red"
         
+        # Deplega los resultado de la validación y crea un hipervínculo a los detalles del método
         label = tk.Label(resultados, text="Kolgomorov-Smirnov", font=("Arial",17)).grid(row=3, column=0)
 
         label2 = tk.Label(resultados, text=comprobacion, font=("Arial",17),fg=color)
@@ -538,6 +551,7 @@ class App(tk.Tk):
                 
                numerosGenerados += 1
         
+        #Tablas para desplegar los números random generados 
            self.creacionCarpeta("Centros_Cuadrados")
            datos = [semillas, generadores, numerosAleatorios, Ris]
            columnas = ["Semilla", "Generador", "Aletorio", "Ri"]
@@ -604,7 +618,7 @@ class App(tk.Tk):
                 carpetaArchivo = "Congruencial_Mixto"
                 self.escrituraCsv(datos, columnas, carpetaArchivo)
             
-            
+            #Tablas para desplegar los números random generados 
             results = tk.Toplevel()
             results.title("Resultados")
             cols = ('Xn','Semilla', 'Generador', 'No. Aleatorio', 'Ri')
@@ -625,6 +639,7 @@ class App(tk.Tk):
             indice=self.porcentajes2.index(self.option3.get())
             sig=self.significancia[indice]
             
+            # Verificar si el usuario quiere realizar una validación con los diversos métodos
             if self.chi.get() == 1:
                 self.validacionChiCuadrada(Ris,results)
             if self.kov.get() == 1:
@@ -705,6 +720,7 @@ class App(tk.Tk):
             carpetaArchivo = "Generador_Multiplicativo"
             self.escrituraCsv(datos, columnas, carpetaArchivo)
             
+            #Tablas para desplegar los números random generados 
             results = tk.Toplevel()
             results.title("Resultados")
             cols = ('Xn','Semilla', 'Generador', 'No. Aleatorio', 'Ri')
@@ -725,6 +741,7 @@ class App(tk.Tk):
             indice=self.porcentajes2.index(self.option3.get())
             sig=self.significancia[indice]
             
+            # Verificar si el usuario quiere realizar una validación con los diversos métodos
             if self.chi.get() == 1:
                 self.validacionChiCuadrada(Ris,results)
             if self.kov.get() == 1:
@@ -811,6 +828,7 @@ class App(tk.Tk):
             carpetaArchivo = "Lineal_Combinado"
             self.escrituraCsv(datos, columnas, carpetaArchivo)
     
+            #Tablas para desplegar los números random generados 
             results = tk.Toplevel()
             results.title("Resultados")
             cols = ('Xn','No. Aleatorio')
@@ -832,12 +850,13 @@ class App(tk.Tk):
             self.errorText.set('Favor de seguir el formato y que todos los numeros sean enteros positivos y  mayores a 0')
             self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
             
-    
     def cuadrados_frame(self, *args):
+        # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text']="Método de los Centros Cuadrados"
         for widget in self.frame.winfo_children():
             widget.destroy()
-        
+            
+        # Display de los inputs necesarios para el método
         semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(column=0,row=1,padx=10,pady=20,sticky="e")
         semilla_input = tk.Entry(self.frame, width=20)
         semilla_input.grid(column=1,row=1,padx=40)
@@ -850,6 +869,7 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=3, columnspan=3,pady=20)
         
     def aux_cuadrados_frame(self,semilla_input,total_input):
+        #Método auxiliar para extraer los datos de los inputs y validar los datos dentro decada input
         self.errorText.set(' ')
         self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
         if semilla_input.get() != '' and total_input.get() != '':
@@ -862,17 +882,18 @@ class App(tk.Tk):
                 return
             self.centrosCuadrados(x1,x2)
         else:
-            #Favor de llenar todos los rubros
+            # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0,row=0,columnspan=2)    
             
     def congruencial_frame(self, *args):
 
+        # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text']="Método Congruencial"
         for widget in self.frame.winfo_children():
             widget.destroy()
 
-        
+        # Display de los inputs necesarios para el método
         semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=1,pady=10,padx=10)
         semilla_input = ttk.Entry(self.frame, width=20)
         semilla_input.grid(column=1,row=1,padx=10)
@@ -893,6 +914,7 @@ class App(tk.Tk):
         total_input = ttk.Entry(self.frame, width=20)
         total_input.grid(column=1,row=5,padx=10) 
         
+        #Checkbox para verificar si el usuario quiere que se hagan las diferentes validaciones
         chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada",variable=self.chi,justify="left")
         chi_cuadrada.grid(sticky = "W", column=2,row=1) 
         
@@ -924,6 +946,7 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
     
     def aux_congruencial_frame(self,semilla,multiplicador,incremento,modulo,total):
+        #Método auxiliar para extraer los datos de los inputs y validar los datos dentro decada input
         self.errorText.set(' ')
         self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
         
@@ -942,17 +965,19 @@ class App(tk.Tk):
             titulo="Congurencial Lineal"
             self.congruencial(x1,x2,x3,x4,x5,titulo)
         else:
+            # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
             
     def congruencial_mixto_frame(self, *args):
-
+        
+        # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text']="Método Congruencial Mixto"
         
         for widget in self.frame.winfo_children():
             widget.destroy()
 
-        
+        # Display de los inputs necesarios para el método
         semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=1,pady=10,padx=10)
         semilla_input = ttk.Entry(self.frame, width=20)
         semilla_input.grid(column=1,row=1,padx=10)
@@ -973,6 +998,7 @@ class App(tk.Tk):
         total_input = ttk.Entry(self.frame, width=20)
         total_input.grid(column=1,row=5,padx=10) 
         
+        #Checkbox para verificar si el usuario quiere que se hagan las diferentes validaciones
         chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada",variable=self.chi,justify="left")
         chi_cuadrada.grid(sticky = "W", column=2,row=1) 
         
@@ -1004,6 +1030,8 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
     
     def aux_congruencial_mixto_frame(self,semilla,multiplicador,incremento,modulo,total):
+        
+        #Método auxiliar para extraer los datos de los inputs y validar los datos dentro decada input
         self.errorText.set(' ')
         self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
         if semilla.get() != '' and multiplicador.get()!= '' and incremento.get()!= '' and modulo.get()!= '' and total.get()!= '':
@@ -1020,15 +1048,17 @@ class App(tk.Tk):
             
             self.congruencialMixto(x1,x2,x3,x4,x5)
         else:
+            # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
         
     def multiplicativo_frame(self, *args):
-
+        # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text']="Generador Multiplicativo"
         for widget in self.frame.winfo_children():
             widget.destroy()
             
+        # Display de los inputs necesarios para el método
         semilla_label= ttk.Label(self.frame,  text='Semilla:',font = ("Castellar",8)).grid(sticky = "e",column=0,row=1,pady=10,padx=10)
         semilla_input = ttk.Entry(self.frame, width=20)
         semilla_input.grid(column=1,row=1,padx=10)
@@ -1045,6 +1075,7 @@ class App(tk.Tk):
         total_input = ttk.Entry(self.frame, width=20)
         total_input.grid(column=1,row=4,padx=10) 
         
+        #Checkbox para verificar si el usuario quiere que se hagan las diferentes validaciones
         chi_cuadrada=tk.Checkbutton(self.frame, text="Chi-Cuadrada",variable=self.chi,justify="left")
         chi_cuadrada.grid(sticky = "W", column=2,row=1) 
         
@@ -1076,6 +1107,7 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=5, columnspan=4,pady=20)
         
     def aux_multiplicativo_frame(self,semilla,multiplicador,modulo,total):
+        #Método auxiliar para extraer los datos de los inputs y validar los datos dentro decada input
         self.errorText.set(' ')
         self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
         if semilla.get() != '' and multiplicador.get()!= '' and modulo.get()!= '' and total.get()!= '':
@@ -1090,16 +1122,18 @@ class App(tk.Tk):
                 return
             self.generadorMultiplicativo(x1,x2,x3,x4)
         else:
+            # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
             
     def congruencial_lineal_combinado_frame(self, *args):
-
+        
+        # Loop para limpiar los widgets del frame para cambiar entre las opciones del menu
         self.frame['text']="Método Congruencial Lineal Combinado"
         for widget in self.frame.winfo_children():
             widget.destroy()
         
-        
+        # Display de los inputs necesarios para el método
         disclaimer = ttk.Label(self.frame,  text='Introduce tus valores con el siguiente formato: 456, 7891, 7831, ...',font = ("Castellar",8))
         disclaimer.grid(column=0,row=1,padx=10,pady=10,columnspan=2)
         
@@ -1127,6 +1161,8 @@ class App(tk.Tk):
         sumbit_btn.grid(column=0,row=6, columnspan=4,pady=20)
         
     def aux_congruencial_lineal_combinado_frame(self,semilla,multiplicador,modulo,total):
+        
+        #Método auxiliar para extraer los datos de los inputs y validar los datos dentro decada input
         self.errorText.set(' ')
         self.errorMessage= tk.Label(self.frame,  textvariable=self.errorText ,font = ("Castellar",8),fg="red")
         
@@ -1142,6 +1178,7 @@ class App(tk.Tk):
                 return
             self.congruencialLinealCombinado(x1,x2,x3,x4)
         else:
+            # Mensaje de error para inputs vacios
             self.errorText.set('Favor de llenar todos los rubros')
             self.errorMessage.grid_configure(column=0,row=0,columnspan=4)  
         
