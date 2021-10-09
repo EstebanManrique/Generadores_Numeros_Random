@@ -1,4 +1,3 @@
-
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkFont
@@ -88,27 +87,39 @@ class App(tk.Tk):
         
         option_menu.place(x=585, y=10)
 
+    #Metodo encargado de crear carpeta, en caso de 
+    #inexsistencia para guardar csv's historicos para
+    #cada uno de los metoods de generacion de aleatorios
     def creacionCarpeta(self,nombreCarpeta):
+        #Se obtiene el path/ruta donde se ejecuta el programa
         pathActual = os.getcwd()
         pathActual = pathActual.replace("\\", "/")
         pathCarpeta = pathActual + "/" + nombreCarpeta + "/"
+        
+        #En caso de que la carpeta no exista, se crea
         if os.path.exists(pathCarpeta):
             pass
         else:
             os.mkdir(pathCarpeta)
     
+    #Metodo encargado de escribir generadores, numeros
+    #aleatorios y Ris generados para cada metodo, en archivos
+    #csv para posterior consulta del usuario
     def escrituraCsv(self,datos, columnas, carpetaArchivo):
         pathActual = os.getcwd()
         pathActual = pathActual.replace("\\", "/")
         pathActual = pathActual + "/" + carpetaArchivo + "/"
     
+        #Se asigna el nombre ar archivo teninedo en cuenta el método
+        #y la hora de ejecucion del mismo
         columnas = numpy.array([columnas])
         t = time.localtime()
         nombreArchivo = time.strftime("%H:%M:%S", t)
         nombreArchivo = nombreArchivo.replace(":", "_") 
         nombreArchivo += carpetaArchivo + ".csv"
         nombreArchivo = pathActual + nombreArchivo
-    
+
+        #Escritura en csv de la informacion previamente explicada
         with open(nombreArchivo, "w", newline = "") as file:
             escritor = csv.writer(file, delimiter = ",")
             escritor.writerows(columnas)
@@ -119,9 +130,11 @@ class App(tk.Tk):
                 renglon = numpy.array([renglon])
                 escritor.writerows(renglon)
 
+    #Metodo invocado por la comprobracion de Chi-Cuadrada
+    #para balancear clases con presencia menor a 5 numeros
     def reasignacionClases(self,limitesClases, frecuenciasAbsolutas):
             for indice in range(0, len(frecuenciasAbsolutas)):
-                if frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
+                if frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1: #Se realiza en caso de que hay presencia menor a 5 numeros
                     while frecuenciasAbsolutas[indice] < 5 and indice < len(frecuenciasAbsolutas) - 1:
                         frecuenciasAbsolutas[indice] += frecuenciasAbsolutas[indice + 1]
                         limitesClases[indice][1] = limitesClases[indice + 1][1]
@@ -274,7 +287,10 @@ class App(tk.Tk):
         label5 = tk.Label(kovFrame, text=text, font=("Arial",15),fg=color)
         label5.grid(row=5, column=2,columnspan=4, pady=20)
         
+    #Metodo encargado de realizar todos los pasos de la
+    #comprobracion de Chi-cuadrada
     def validacionChiCuadrada(self,numeros,resultados):
+        #Ordenamiento de numeros, obtencion de tamano clase
         numeros.sort()
         numeroMenor = numeros[0]
         numeroMayor = numeros[len(numeros) - 1]
@@ -283,6 +299,7 @@ class App(tk.Tk):
         sizeClase = round(1 / k, 5)
         print(sizeClase)
         
+        #Generacion de clases
         limitesClases = []
         bandera = 0
         while bandera <= numeroMayor:
@@ -291,13 +308,12 @@ class App(tk.Tk):
         frecuenciasAbsolutas = []
         for intervalo in limitesClases:
             frecuenciasAbsolutas.append(sum(map(lambda x: x >= intervalo[0] and x < intervalo[1], numeros)))
-    
-        #print(limitesClases)
-        #print(frecuenciasAbsolutas)
 
+        #Se verifica si se deben realizar reasignaciones de clases
         limitesClases = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[0]
         frecuenciasAbsolutas = self.reasignacionClases(limitesClases, frecuenciasAbsolutas)[1]
     
+        #Se calculan las probabilidades reales y os elementos del Estadistico de Prueba
         probabilidades = []
         frecuenciasEsperadas = []
         elementosEstadisticoPrueba = []
@@ -310,6 +326,7 @@ class App(tk.Tk):
                 frecuenciasEsperadas.append(round(len(numeros) - sum(frecuenciasEsperadas), 3))
             elementosEstadisticoPrueba.append(round(math.pow((frecuenciasAbsolutas[indice] - frecuenciasEsperadas[indice]),2) / frecuenciasEsperadas[indice], 5)) 
         
+        #Se obtiene el estadistico de Prueba, al igual que el estadistico de ChiCuadrada
         indice=self.porcentajes.index(self.option2.get())
         estadisticoPrueba = round(sum(elementosEstadisticoPrueba), 5)
         gradosLibertad = (len(limitesClases) - 1) 
@@ -355,7 +372,10 @@ class App(tk.Tk):
                     fig=fig,com=comprobacion: 
                     self.chi_frame(a,b,c,d,e,f,g,h,i,j,fig,com) )
  
+    #Metodo encargado de realizar todos los pasos de la
+    #comprobacion de Kolmogorov Smirnov
     def kolgomorovSmirnov(self,numeros,nivelSignificancia,resultados):
+        #Ordenamiento de numeros
         numeros.sort()
         Ri = numeros 
         N = len(numeros)
@@ -373,6 +393,7 @@ class App(tk.Tk):
         for i in range (1, N): #Calcular Ri - ((i-1)/N)
             ar.append(abs(Ri[i] - i_n[i-1]))
     
+        #Obtencion de D+, D- y Dmax{D+, D-}
         Dplus = max(i_n1)
         Dminus = max(ar)
         Dtotal = max(Dplus, Dminus)
@@ -424,6 +445,7 @@ class App(tk.Tk):
         dataframe = pd.DataFrame(datos,index = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
                                                 22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40], columns = [0.20,0.10,0.05,0.02,0.01,0.005,0.002,0.001]) # Los columns son los porcentajes para KolgomorovSmirnov (20%, 10%, 5%, 2%, 1%)
 
+        #Calculo del valor critico con base en tabla de kolmogorov y  nivel de significancia
         if(nivelSignificancia >= 0.001 and nivelSignificancia <= 0.20):
           if(N<41):
             valorCritico = dataframe[nivelSignificancia][N]
@@ -466,6 +488,7 @@ class App(tk.Tk):
         verticales.append(0)
         save_ri=Ri
         
+        #Generacion de puntos para ser graficados -S(n) y F(x)- en comprobacion
         for i__n in range(len(i_n)):
             for i in range(0,2):
               verticales.append(i_n[i__n])
@@ -506,7 +529,9 @@ class App(tk.Tk):
         label2.bind("<Button-1>", lambda event, a=save_ri, b=i_n, c=i_n1, d=ar, f=fig, com=condicion,text=comprobacion,g=N,h=Dplus,i=Dminus,j=Dtotal: 
                     self.kov_frame(a,b,c,d,f,com,text,g,h,i,j) )
 
+    #Funcion encaragada de realizar el metodo de Centros Cuadrados
     def centrosCuadrados(self, semillaInicio, numerosAGenerar):
+       #Manejo de errores al presentarse parametros no aceptodos por el metodo
        try:
            semilla = int(semillaInicio)
        except:
@@ -523,7 +548,7 @@ class App(tk.Tk):
            self.errorMessage.grid_configure(column=0,row=0,columnspan=2)
            return
        
-       
+       #Esta parte del codigo simboliza la generacion de n. aleatorios, al igual que de Ri
        if len(str(semillaInicio)) == 4 and semilla >= 100 and semilla <= 9999:
            numerosAleatorios = []
            Ris = []
@@ -536,17 +561,17 @@ class App(tk.Tk):
                semillas.append(semilla)
                semillaCuadrado = semilla * semilla
                if len(str(semillaCuadrado)) < 8:
-                   
+                   #Completa semilla al cuadrado en caso de no tener 8 digitos
                    for relleno in range((8 - len(str(semillaCuadrado)))):
                        complemento += "0"
                semillaCuadrado = complemento + str(semillaCuadrado)
                 
-               numeroAleatorio = str(semillaCuadrado)[2:6]
+               numeroAleatorio = str(semillaCuadrado)[2:6] #Se obtiene numero aleatorio
                numerosAleatorios.append(numeroAleatorio)
                semilla = int(numeroAleatorio)
-               Ri = int(numeroAleatorio) / 10000
+               Ri = int(numeroAleatorio) / 10000 #Se obtiene Ri
                Ris.append(Ri)
-               generador = str(semillaCuadrado)[0:2] + "|" + numeroAleatorio + "|" + str(semillaCuadrado)[6:]
+               generador = str(semillaCuadrado)[0:2] + "|" + numeroAleatorio + "|" + str(semillaCuadrado)[6:] #Se obtiene generador
                generadores.append(generador)
                 
                numerosGenerados += 1
@@ -578,13 +603,17 @@ class App(tk.Tk):
        else:
            self.errorText.set('La semilla otorgada no es un numero enetero de 4 digitos decimales')
            self.errorMessage.grid_configure(column=0,row=0,columnspan=2) 
-           
+
+    #Funcion encaragada de realizar el metodo de Metodo Congruencial 
+    #(se invoca desde aqui al Congruencial y/o al Congruencial Mixto)       
     def congruencial(self,semilla, multiplicador, incremento, modulo, numerosAGenerar,titulo):
+        #Manejo de errores con los parametros obtenidos del usuario
         if numerosAGenerar < 1:
            self.errorText.set('Numeros a Generar debe ser mayor a 0')
            self.errorMessage.grid_configure(column=0,row=0,columnspan=4)
            return
         
+        #Manejo de errores con los parametros obtenidos del usuario
         if modulo > 0 and modulo > multiplicador and multiplicador > 0 and modulo > incremento and (incremento > 0 or incremento == 0) and modulo > semilla and (semilla > 0 or semilla == 0):
             numerosAleatorios = []
             Ris = []
@@ -592,19 +621,20 @@ class App(tk.Tk):
             generadores = []
             numerosGenerados = 0
     
+            #Se realiza la formula para la obtencion los numeros aleatorios y los Ri's
             while numerosGenerados < numerosAGenerar:
                 semillas.append(semilla)
-                generador = "(" + str(multiplicador) + "(" + str(semilla) + ")" + "+ " + str(incremento) + ")" + "mod" + "(" + str(modulo) + ")"
+                generador = "(" + str(multiplicador) + "(" + str(semilla) + ")" + "+ " + str(incremento) + ")" + "mod" + "(" + str(modulo) + ")" #Obtencion generador
                 generadores.append(generador)
-                numeroAleatorio = (multiplicador * semilla + incremento) % modulo
+                numeroAleatorio = (multiplicador * semilla + incremento) % modulo #Obtencio del numero aleatorio
                 numerosAleatorios.append(numeroAleatorio)
-                Ri = numeroAleatorio / modulo
+                Ri = numeroAleatorio / modulo #Obtencion del Ri
                 Ris.append(Ri)
                 semilla = numeroAleatorio
     
                 numerosGenerados += 1
     
-            
+            #Dependiendo del usuario, se invoca a la escritura de los resultados en las carpetas de Congruencial Lineal o Mixto
             if titulo == "Congurencial Lineal":
                 self.creacionCarpeta("Congruencial")
                 datos = [semillas, generadores, numerosAleatorios, Ris]
@@ -648,8 +678,10 @@ class App(tk.Tk):
         else:
             self.errorText.set('El modulo tiene que ser mayor a los demas valores; el multiplicador, incremento y semilla deben ser mayores a Cero')
             self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
-            
+
+    #Metodo auxiliar para manejo de errores de parametros de usuario al realizar Congruencial Mixto        
     def congruencialMixto(self,semilla, multiplicador, incremento, modulo, numerosAGenerar):
+         #Manejo de errores con los parametros obtenidos del usuario
         if self.hullDobell(multiplicador, incremento, modulo):
             titulo="Congruencial Mixto"
             self.congruencial(semilla, multiplicador, incremento, modulo, numerosAGenerar,titulo)
@@ -658,8 +690,11 @@ class App(tk.Tk):
             self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
             print("Los parametros no logran cumplir la evaluacion de Hull-Dobell")
 
+    #Metodo auxiliar para realizar comprobacion de Hull-Dobell
+    #durante el metodo de generacion Congruencial Mixto
     def hullDobell(self,multiplicador, incremento, modulo): # a es el multiplicador, c es el incremento
         verificadorDivisor = 2
+        #Verifica que el MCD entre incremento y modulo sea 1
         while verificadorDivisor <= modulo:
             if incremento % verificadorDivisor != 0 or modulo % verificadorDivisor != 0:
                 verificadorDivisor += 1
@@ -667,6 +702,7 @@ class App(tk.Tk):
                 return False
                 
         numerosPrimosDivisores = []
+        #Verifica segundo estatuto de la prueba Hull-Dobell
         for numero in range(2, modulo):
             if modulo % numero == 0 and self.numeroPrimo(numero) == True:
                 numerosPrimosDivisores.append(numero)
@@ -675,13 +711,15 @@ class App(tk.Tk):
                 continue
             else:
                 return False
-        
+
+        #Verifica tercer estatuto de la prueba Hull-Dobell
         if modulo % 4 == 0: 
             if (multiplicador - 1) % 4 != 0: return False
             else: return True
     
         return True
     
+    #Metodo auxiliar para determinar si un numero es primo
     def numeroPrimo(self,numero):
         if numero == 2: return True
         for num in range(2, numero):
@@ -689,12 +727,16 @@ class App(tk.Tk):
                 return False
         return True
     
+    #Funcion encargada de realizar todos los pasos
+    #contemplados en el generador Multiplicativo
     def generadorMultiplicativo(self,semilla, multiplicador, modulo, numerosAGenerar):
+        #Comprobacion y manejo de rrores por elementos introducidos por usuario
         if numerosAGenerar < 1:
            self.errorText.set('Numeros a Generar debe ser mayor a 0')
            self.errorMessage.grid_configure(column=0,row=0,columnspan=4)
            return
        
+        #Comprobacion y manejo de rrores por elementos introducidos por usuario
         if (semilla == 0 or semilla > 0) and (multiplicador == 0 or multiplicador > 0) and (modulo == 0 or modulo > 0) and modulo > multiplicador and modulo > semilla and float(semilla).is_integer() and float(multiplicador).is_integer() and float(modulo).is_integer():
             numerosAleatorios = []
             Ris = []
@@ -704,11 +746,11 @@ class App(tk.Tk):
     
             while numerosGenerados < numerosAGenerar:
                 semillas.append(semilla)
-                generador = "(" + str(multiplicador) + "*" + str(semilla) + ")" + "mod" + "(" + str(modulo) + ")"
+                generador = "(" + str(multiplicador) + "*" + str(semilla) + ")" + "mod" + "(" + str(modulo) + ")" #Obtencion del generador
                 generadores.append(generador)
-                numeroAleatorio = (multiplicador * semilla) % modulo
+                numeroAleatorio = (multiplicador * semilla) % modulo #Obtencion del numero aleatorio con formula del generador Multiplicativo
                 numerosAleatorios.append(numeroAleatorio)
-                Ri = numeroAleatorio / modulo
+                Ri = numeroAleatorio / modulo #Obtencion de Ri
                 Ris.append(Ri)
                 semilla = numeroAleatorio
                 
@@ -750,6 +792,8 @@ class App(tk.Tk):
             self.errorText.set('El modulo tiene que ser mayor a los demas valores; el multiplicador y semilla deben ser mayores o iguales a Cero')
             self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
     
+    #Metodo auxiliar para separacion de valores a ser usados
+    #como semillas, modulos, y multplicadores con L'Ecuyer
     def separacionValores(self,listaValores):
         arregloValores = []
         valorenCurso = ""
@@ -758,7 +802,7 @@ class App(tk.Tk):
             if caracter.isdigit():
                 valorenCurso += caracter
                 if indice == len(listaValores) - 1:
-                    if int(valorenCurso) == 0:
+                    if int(valorenCurso) == 0: #No se aceptan valores de 0
                         return False
                     (arregloValores).append(int(valorenCurso))
                     valorenCurso = ""
@@ -770,21 +814,26 @@ class App(tk.Tk):
             elif caracter.isspace():
                 indice += 1
                 continue
-            else:
+            else: #Solo se aceptan digitos, comas y espacios; lo demas generara excepcion y manejo de errores
                 return False
             indice += 1
         return arregloValores 
     
+    #Metodo encargado de realizar todos los pasos necesarios
+    #para implementar el metodo de L'Ecuyer
     def congruencialLinealCombinado(self,semillasOriginales, multiplicadores, modulos, numerosAGenerar):
+        #Comprobacion y manejo de errores de parametros de usuarios
         if numerosAGenerar < 1:
            self.errorText.set('Numeros a Generar debe ser mayor a 0')
            self.errorMessage.grid_configure(column=0,row=0,columnspan=2)
            return
+        #Comprobacion y manejo de errores de parametros de usuarios
         if(self.separacionValores(semillasOriginales) != False and self.separacionValores(multiplicadores) != False and self.separacionValores(modulos) != False): 
-            semillas = self.separacionValores(semillasOriginales)
-            multiplicadores = self.separacionValores(multiplicadores)
-            modulos = self.separacionValores(modulos)
-            if len(semillas) != len(multiplicadores) or len(multiplicadores) != len(modulos):
+            semillas = self.separacionValores(semillasOriginales) #Se separan y obtienen todas las semillas a ser usadas
+            multiplicadores = self.separacionValores(multiplicadores) #Se separan y obtienen todos los multiplicadores a ser usados
+            modulos = self.separacionValores(modulos) #Se separan y obtienen todos los modulos a ser usados
+            
+            if len(semillas) != len(multiplicadores) or len(multiplicadores) != len(modulos): #Manejo de errores con semillas, multiplicadores y modulos
                 self.errorText.set('Introducir el mismo número de semillas, módulos y multiplicadores')
                 self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
                 return
@@ -803,11 +852,10 @@ class App(tk.Tk):
                 numeroAleatorio = numerosTemporales[0]
                 for numero in numerosTemporales[1:]:
                     numeroAleatorio -= numero
-                numeroAleatorio = numeroAleatorio % (modulos[0] - 1) #Misma cuestion de modulos
-                numerosAleatorios.append(numeroAleatorio)
-                Ris.append(numeroAleatorio / modulos[0]) #Ris se saca con modulos[0] o modulos[0] - 1
+                numeroAleatorio = numeroAleatorio % (modulos[0] - 1) 
+                Ris.append(numeroAleatorio / modulos[0]) #Obtencion de Ri
                 for semilla in range(0, len(modulos)):
-                    semillasHistoricas[semilla].append(semillas[semilla])
+                    semillasHistoricas[semilla].append(semillas[semilla]) #Obtencion de la semilla usada
                 semillas = numerosTemporales
                 numerosTemporales = []
                 numerosGenerados += 1
