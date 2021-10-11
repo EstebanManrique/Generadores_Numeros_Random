@@ -491,11 +491,11 @@ def escrituraCsv(datos, columnas, carpetaArchivo):
             escritor.writerows(renglon)
 
 
-centrosCuadrados("3547", 200)
+#centrosCuadrados("3547", 200)
 #congruencial(4,5,7,8,8,0)
 #congruencialMixto(4,8121,28411,134456,8)
 #generadorMultiplicativo(15,35,64,25)
-#congruencialLinealCombinado("15985,33652", "40014,40692", "2147493563,2147483399", 20)
+congruencialLinealCombinado("15985,33652,4545", "40014,40692,6678", "2147493563,2147483399,4557632", 20)
 
 #print(hullDobell(5,7,8))
 #print(hullDobell(75,74,65537))

@@ -333,7 +333,7 @@ class App(tk.Tk):
         estadisticoChiCuadrada = round(self.tablaChiCuadrada[(gradosLibertad-1),indice], 5)
         
         # Configuración para el display de la gráfica
-        fig = Figure(figsize=(12,5),dpi=100)
+        fig = Figure(figsize=(12,3.5),dpi=100)
         etiquetasGrafica = limitesClases
         ubicacionesBarras = numpy.arange(len(frecuenciasAbsolutas))
         ancho = 0.35
@@ -344,7 +344,6 @@ class App(tk.Tk):
         esperadas = aux.bar(ubicacionesBarras + ancho / 2, frecuenciasEsperadas, ancho, label="Esperadas")
         aux.set_xlabel("Rangos de las clases")
         aux.set_ylabel("Numeros")
-        aux.set_title("Frecuencias Encontradas VS Esperadas")
         aux.set_xticks(ubicacionesBarras)
         aux.set_xticklabels(etiquetasGrafica)
         aux.legend()
@@ -498,7 +497,7 @@ class App(tk.Tk):
         horizontales.append(1)
         
         # Configuración para el display de la gráfica
-        fig = Figure(figsize=(5,5),dpi=100)
+        fig = Figure(figsize=(5,3),dpi=100)
         aux=fig.add_subplot(111)
         aux.plot(horizontales,verticales)
         Ri.insert(0,0)
@@ -828,15 +827,17 @@ class App(tk.Tk):
            self.errorMessage.grid_configure(column=0,row=0,columnspan=2)
            return
         #Comprobacion y manejo de errores de parametros de usuarios
+
         if(self.separacionValores(semillasOriginales) != False and self.separacionValores(multiplicadores) != False and self.separacionValores(modulos) != False): 
             semillas = self.separacionValores(semillasOriginales) #Se separan y obtienen todas las semillas a ser usadas
             multiplicadores = self.separacionValores(multiplicadores) #Se separan y obtienen todos los multiplicadores a ser usados
             modulos = self.separacionValores(modulos) #Se separan y obtienen todos los modulos a ser usados
-            
+    
             if len(semillas) != len(multiplicadores) or len(multiplicadores) != len(modulos): #Manejo de errores con semillas, multiplicadores y modulos
                 self.errorText.set('Introducir el mismo número de semillas, módulos y multiplicadores')
                 self.errorMessage.grid_configure(column=0,row=0,columnspan=4) 
                 return
+
             Ris = []
             numerosAleatorios = []
             semillasHistoricas = []
@@ -853,19 +854,23 @@ class App(tk.Tk):
                 for numero in numerosTemporales[1:]:
                     numeroAleatorio -= numero
                 numeroAleatorio = numeroAleatorio % (modulos[0] - 1) 
+                numerosAleatorios.append(numeroAleatorio)
                 Ris.append(numeroAleatorio / modulos[0]) #Obtencion de Ri
                 for semilla in range(0, len(modulos)):
                     semillasHistoricas[semilla].append(semillas[semilla]) #Obtencion de la semilla usada
                 semillas = numerosTemporales
                 numerosTemporales = []
                 numerosGenerados += 1
-                
+
+            print(numerosAleatorios)
+            
             self.creacionCarpeta("Lineal_Combinado")
             datos = []
             for semilla in range(0, len(modulos)):
                 datos.append(semillasHistoricas[semilla])
             datos.append(numerosAleatorios)
             datos.append(Ris)
+            
             indice = 1
             columnas = []
             for semilla in range(0, len(modulos)):
@@ -873,6 +878,7 @@ class App(tk.Tk):
                 indice += 1
             columnas.append("Aleatorio")
             columnas.append("Ri")
+            
             carpetaArchivo = "Lineal_Combinado"
             self.escrituraCsv(datos, columnas, carpetaArchivo)
     
